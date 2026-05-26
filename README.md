@@ -1,33 +1,33 @@
 # SmartHerz Assistant FE
 
-Frontend osnova za SmartHerz Assistant aplikaciju.
+Frontend foundation for the SmartHerz Assistant application.
 
-Projekat je postavljen na `Next.js` App Router arhitekturi i trenutno predstavlja pocetni UI skeleton za dalje razvijanje asistenta. Fokus ove baze je da obezbedi stabilan frontend setup, osnovni layout, UI biblioteku i staticki build/deploy flow.
+This project is built with the `Next.js` App Router and currently serves as the initial UI skeleton for further assistant development. The goal of this codebase is to provide a stable frontend setup, a basic layout system, a UI component library, and a static build/deployment flow.
 
-## Sadrzaj
+## Table of Contents
 
-- [Pregled](#pregled)
-- [Tehnoloski stack](#tehnoloski-stack)
-- [Trenutna implementacija](#trenutna-implementacija)
-- [Struktura projekta](#struktura-projekta)
-- [Pokretanje projekta](#pokretanje-projekta)
-- [Dostupne skripte](#dostupne-skripte)
-- [Konfiguracija](#konfiguracija)
-- [Build i deploy](#build-i-deploy)
-- [Napomene](#napomene)
+- [Overview](#overview)
+- [Tech Stack](#tech-stack)
+- [Current Implementation](#current-implementation)
+- [Project Structure](#project-structure)
+- [Getting Started](#getting-started)
+- [Available Scripts](#available-scripts)
+- [Configuration](#configuration)
+- [Build and Deployment](#build-and-deployment)
+- [Notes](#notes)
 
-## Pregled
+## Overview
 
-Ovaj repozitorijum sadrži frontend osnovu za SmartHerz Assistant. Trenutna verzija nije gotov proizvodni interfejs, vec polazna tačka za razvoj glavnih UI modula i integracija.
+This repository contains the frontend base for SmartHerz Assistant. The current version is not a finished production interface. It is a starting point for building the main UI modules and future integrations.
 
-Cilj postojeće postavke je:
+The current setup is intended to:
 
-- da obezbedi `Next.js` frontend sa `TypeScript` podrskom
-- da uvede `MUI` kao glavnu UI biblioteku
-- da pripremi projekat za internacionalizaciju preko `i18next`
-- da omoguci staticki export za jednostavniji deploy
+- provide a `Next.js` frontend with `TypeScript`
+- use `MUI` as the primary UI library
+- prepare the project for internationalization through `i18next`
+- support static export for simpler deployment
 
-## Tehnoloski stack
+## Tech Stack
 
 - `Next.js 14`
 - `React 18`
@@ -38,22 +38,22 @@ Cilj postojeće postavke je:
 - `Axios`
 - `Fabric.js`
 
-## Trenutna implementacija
+## Current Implementation
 
-Trenutno je u kodu implementirano sledeće:
+The codebase currently includes:
 
-- root layout preko `src/app/layout.tsx`
-- učitavanje `Inter` i `Roboto Mono` fontova preko `next/font/google`
-- globalni stilovi i osnovne CSS varijable u `src/app/globals.css`
-- pocetna strana sa dvokolonskim `MUI Box` layout-om u `src/app/page.tsx`
-- responsive raspored:
-  - jedna kolona na manjim ekranima
-  - dve kolone od `md` breakpoint-a
-- placeholder paneli `LEFT` i `RIGHT` kao osnova za buduce module
+- a root layout in `src/app/layout.tsx`
+- `Inter` and `Roboto Mono` fonts loaded through `next/font/google`
+- global styles and base CSS variables in `src/app/globals.css`
+- a two-column `MUI Box` layout on the home page in `src/app/page.tsx`
+- a responsive layout:
+  - single column on smaller screens
+  - two columns from the `md` breakpoint upward
+- placeholder `LEFT` and `RIGHT` panels as the base for future modules
 
-Biblioteke za internacionalizaciju i dodatne integracije su instalirane, ali jos nisu povezane u aktivan UI flow.
+Internationalization and helper dependencies are installed, but they are not yet wired into the active UI flow.
 
-## Struktura projekta
+## Project Structure
 
 ```text
 .
@@ -70,36 +70,36 @@ Biblioteke za internacionalizaciju i dodatne integracije su instalirane, ali jos
         `-- page.tsx
 ```
 
-Najbitniji fajlovi:
+Key files:
 
-- `src/app/page.tsx` - pocetna stranica i trenutni layout aplikacije
-- `src/app/layout.tsx` - globalni layout i font konfiguracija
-- `src/app/globals.css` - osnovni globalni stilovi
-- `next.config.js` - build i deploy konfiguracija
-- `globals.d.ts` - TypeScript deklaracija za CSS importe
+- `src/app/page.tsx` - current home page and layout entry point
+- `src/app/layout.tsx` - global layout and font configuration
+- `src/app/globals.css` - base global styles
+- `next.config.js` - build and deployment configuration
+- `globals.d.ts` - TypeScript declaration for CSS imports
 
-## Pokretanje projekta
+## Getting Started
 
-### Preduslovi
+### Prerequisites
 
 - `Node.js` LTS
 - `npm`
 
-### Instalacija
+### Installation
 
 ```bash
 npm install
 ```
 
-### Development server
+### Run in Development
 
 ```bash
 npm run dev
 ```
 
-Posle pokretanja, aplikacija je dostupna na `http://localhost:3000`.
+The application will be available at `http://localhost:3000`.
 
-## Dostupne skripte
+## Available Scripts
 
 ```bash
 npm run dev
@@ -107,59 +107,59 @@ npm run build
 npm run lint
 ```
 
-Značenje skripti:
+Script summary:
 
-- `npm run dev` - pokreće development server
-- `npm run build` - pravi produkcioni statički build
-- `npm run lint` - pokreće ESLint proveru
+- `npm run dev` - starts the development server
+- `npm run build` - creates the production static build
+- `npm run lint` - runs ESLint
 
-## Konfiguracija
+## Configuration
 
-Projekat koristi `next.config.js` sa sledećim bitnim podešavanjima:
+The project uses `next.config.js` with the following relevant settings:
 
-- `output: "export"` za statički export
+- `output: "export"` for static export
 - `trailingSlash: true`
-- `basePath` i `assetPrefix` preko `NEXT_PUBLIC_BASE_PATH`
+- `basePath` and `assetPrefix` driven by `NEXT_PUBLIC_BASE_PATH`
 - `images.unoptimized: true`
-- dozvoljen remote image host `cybercompany.ai`
-- uključen `topLevelAwait` u webpack eksperimentima
+- remote image host allowlist for `cybercompany.ai`
+- `topLevelAwait` enabled through webpack experiments
 
-### Environment promenljive
+### Environment Variables
 
-Opcionalno:
+Optional:
 
 ```bash
-NEXT_PUBLIC_BASE_PATH=/ime-putanje
+NEXT_PUBLIC_BASE_PATH=/your-base-path
 ```
 
-Koristi se kada aplikacija treba da bude servirana iza podputanje.
+Use this when the application needs to be served from a subpath.
 
-Na Windows PowerShell-u:
+In Windows PowerShell:
 
 ```powershell
-$env:NEXT_PUBLIC_BASE_PATH="/ime-putanje"
+$env:NEXT_PUBLIC_BASE_PATH="/your-base-path"
 ```
 
-## Build i deploy
+## Build and Deployment
 
-Za produkcioni build:
+To create a production build:
 
 ```bash
 npm run build
 ```
 
-Statički izlaz se generiše u `out/` folderu.
+The static output is generated in the `out/` directory.
 
-Za lokalni preview statičkog build-a koristi:
+To preview the exported build locally:
 
 ```bash
 npx serve@latest out
 ```
 
-`npm start` trenutno nije validan runtime flow za ovaj projekat, zato sto `Next.js` sa `output: "export"` ne podrzava `next start`.
+`npm start` is not a valid runtime flow for the current setup because `Next.js` with `output: "export"` does not support `next start`.
 
-## Napomene
+## Notes
 
-- `page.module.css` trenutno postoji u repozitorijumu, ali aktivna početna strana koristi `MUI` stilizaciju iz `page.tsx`.
-- Implementacija je trenutno osnova projekta, ne finalni korisnicki interfejs.
-- Internacionalizacija je pripremljena na nivou zavisnosti, ali nije još integrisana u aplikacioni tok.
+- `page.module.css` is still present in the repository, but the active home page is currently styled through `MUI` in `page.tsx`.
+- The implementation is currently a project foundation, not a final user-facing interface.
+- Internationalization dependencies are installed, but not yet integrated into the application flow.
