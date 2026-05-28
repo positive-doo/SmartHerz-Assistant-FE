@@ -1,27 +1,22 @@
-const BASE = process.env.NEXT_PUBLIC_BASE_PATH || '';
+const BASE = process.env.NEXT_PUBLIC_BASE_PATH || "";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export',
+  output: "export",
   trailingSlash: true,
+
   basePath: BASE,
-  assetPrefix: BASE ? `${BASE}/` : undefined,
+
+  assetPrefix: BASE ? BASE : undefined,
+
   images: {
     unoptimized: true,
     remotePatterns: [
       {
-        protocol: 'https',
-        hostname: 'cybercompany.ai',
+        protocol: "https",
+        hostname: "cybercompany.ai",
       },
     ],
-  },
-  webpack(config, { isServer }) {
-    if (!isServer) {
-      config.output.publicPath = `${BASE}/_next/static/`;
-    }
-
-    Object.assign(config.experiments, { topLevelAwait: true });
-    return config;
   },
 };
 

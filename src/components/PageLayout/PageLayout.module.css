@@ -1,0 +1,32 @@
+.root {
+  height: 100vh;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 6fr 4fr;
+  box-sizing: border-box; /* ✅ */
+}
+
+.left {
+  height: 100vh;
+  overflow: hidden;
+  border-right: 1px solid #e5e5e5;
+  padding: 24px;
+  box-sizing: border-box; /* ✅ */
+}
+
+.right {
+  height: 100vh;
+  overflow: hidden;
+  padding: 24px;
+  box-sizing: border-box; /* ✅ */
+}
+
+@media (max-width: 900px) {
+  .root {
+    grid-template-columns: 1fr;
+  }
+
+  .left {
+    border-right: none;
+  }
+}
