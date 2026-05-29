@@ -1,0 +1,102 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  color: #111827;
+  font-family: var(--font-inter), sans-serif;
+}
+
+.title {
+  margin: 0 0 8px;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1;
+  font-family: var(--font-inter), sans-serif;
+}
+
+.divider {
+  width: 100%;
+  max-width: 795px;
+  height: 1px;
+  margin-bottom: 16px;
+  background-color: #a855f7;
+  opacity: 0.6;
+}
+
+.filterHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.filterLabel {
+  margin-top: 20px;
+  color: #9F5FE9;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  font-family: var(--font-inter), sans-serif;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-width: 795px;
+}
+
+.pill:hover {
+  background-color: #9F5FE9;
+  color: #fff;
+}
+
+.eyeButton {
+  margin-top: 20px;
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin-left: 1px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+}
+
+.eyeIcon {
+  color: #9F5FE9;
+  width: 14px;
+  height: 14px;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border: 1px solid #a855f7;
+  border-radius: 999px;
+  background: transparent;
+  color: #111827;
+  cursor: pointer;
+  font-family: var(--font-inter), sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  text-transform: none;
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.pill:hover {
+  border-color: #6d28d9;
+}
+
+.pill:focus-visible {
+  outline: 2px solid rgba(109, 40, 217, 0.35);
+  outline-offset: 2px;
+}
+
+.pillIcon {
+  font-size: 18px !important;
+}

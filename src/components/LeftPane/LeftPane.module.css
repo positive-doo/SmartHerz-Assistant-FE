@@ -34,7 +34,7 @@
 /* Donji blok */
 .bottom {
   position: absolute;
-  left: 0;
+  left: -15px;
   right: 0;
   bottom: 28px;
   z-index: 3;
@@ -50,6 +50,7 @@
   flex: 0 0 auto;
   display: flex;
   align-items: flex-end;
+  margin-bottom: -28px;
 }
 
 .bottomContent {
@@ -58,21 +59,22 @@
 }
 
 /* Bubble wrapper da ikonica bude vezana za bubble */
-.bubbleWrap {
+.assistantBubbleWrap {
   position: relative;
   display: inline-block;
   margin-bottom: 40px;
 }
 
 /* Bubble */
-.bubble {
+.assistantBubble {
   background: #FAF6EE;
   border-radius: 18px;
   padding: 16px 18px;
   position: relative;
+  max-width: 550px;
 }
 
-.bubble::before {
+.assistantBubble::before {
   content: "";
   position: absolute;
   bottom: -18px;
@@ -81,7 +83,7 @@
   border-bottom-right-radius: 100% 100%;
 }
 
-.bubble::after {
+.assistantBubble::after {
   content: "";
   position: absolute;
   bottom: -16px;
@@ -102,10 +104,10 @@
 
 .bubbleAvatar {
   position: absolute;
-  left: -20px;
-  bottom: -26px;
-  width: 22px;
-  height: 22px;
+  left: -25px;
+  bottom: -31px;
+  width: 30px;
+  height: 30px;
   border-radius: 999px;
   overflow: hidden;
   background: #ffffff;
@@ -118,8 +120,9 @@
 .inputBlock {
   display: flex;
   flex-direction: column;
+  margin-left: 129px;
   gap: 8px;
-  max-width: 520px;
+  max-width: 550px;
 }
 
 .inputRow {
@@ -149,13 +152,12 @@
 }
 
 .sendButton {
-  width: 22px;
-  height: 22px;
+  width: 25px;
+  height: 25px;
   border: none;
   border-radius: 4px;
-  background: #9F5FE9;
+  background: transparent;
   cursor: pointer;
-
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -178,6 +180,69 @@
   color: #6b7280;
   line-height: 1.35;
   max-width: 520px;
+}
+
+.userRow {
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+  gap: 10px;
+  margin: 10px 0 12px;
+}
+
+/* User bubble (desno) */
+.userBubble {
+  background: #FAF6EE;
+  border-radius: 18px;
+  padding: 12px 16px;
+  max-width: 520px;
+  font-size: 14px;
+  line-height: 1.35;
+  position: relative;
+}
+
+.userBubble::before {
+  content: "";
+  position: absolute;
+  bottom: -18px;
+  right: 0px;
+  background: transparent;
+  border-bottom-left-radius: 100% 100%; 
+}
+
+.userBubble::after {
+  content: "";
+  position: absolute;
+  bottom: -10px;
+  right: -10px;
+  width: 25px;
+  height: 20px;
+  background: transparent;
+  border-bottom-left-radius: 100% 100%;
+  box-shadow: -8px 0px 0 0px #FAF6EE;
+}
+
+.userBubbleWrap {
+  position: relative;
+  display: inline-block;
+  padding-right: 34px;
+}
+
+/* User ikonica (ljubičasta) */
+.userIcon {
+  width: 26px;
+  height: 26px;
+  border-radius: 18px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.userIcon img {
+  display: block;
+  width: 26px;
+  height: 26px;
 }
 
 /* Mobile */

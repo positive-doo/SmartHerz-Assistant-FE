@@ -1,49 +1,61 @@
-import React from "react";
-import { Box, Button, Typography } from "@mui/material";
+"use client";
+
+import { useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
+import styles from "./RightPane.module.css";
+import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
+import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
 
 type RightPaneProps = {
   title?: string;
 };
 
-export default function RightPane({ title = "AI asistent vam preporučuje" }: RightPaneProps) {
+const filterLabels = ["Unesi odredište", "Unesi datum", "Unesi interesovanje"];
+
+export default function RightPane({
+  title = "AI asistent vam preporučuje",
+}: RightPaneProps) {
+  const [showFilters, setShowFilters] = useState(true);
+
   return (
-    <Box>
-      <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
-        {title}
-      </Typography>
+    <div className={styles.root}>
+      <h2 className={styles.title}>{title}</h2>
 
-      <Box sx={{ height: 1, backgroundColor: "#a855f7", opacity: 0.6, mb: 2, width: "795px" }} />
+      <div className={styles.divider} />
 
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
-        <Typography variant="body2" sx={{ fontWeight: 600, color: "#6d28d9" }}>
-          Aktivni filteri
-        </Typography>
-      </Box>
+      <div className={styles.filterHeader}>
+        <p className={styles.filterLabel}>Aktivni filteri</p>
 
-      <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-        <FilterPill label="Unesi odredište" />
-        <FilterPill label="Unesi datum" />
-        <FilterPill label="Unesi interesovanje" />
-      </Box>
-    </Box>
+        <button
+          type="button"
+          className={styles.eyeButton}
+          aria-label="Toggle filters"
+          onClick={() => setShowFilters((v) => !v)}
+        >
+          {showFilters ? (
+            <VisibilityOffOutlinedIcon className={styles.eyeIcon} />
+          ) : (
+            <VisibilityOutlinedIcon className={styles.eyeIcon} />
+          )}
+        </button>
+      </div>
+
+      {showFilters && (
+        <div className={styles.filters}>
+          {filterLabels.map((label) => (
+            <FilterPill key={label} label={label} />
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
 function FilterPill({ label }: { label: string }) {
   return (
-    <Button
-      variant="outlined"
-      startIcon={<AddIcon />}
-      sx={{
-        borderRadius: 999,
-        textTransform: "none",
-        borderColor: "#a855f7",
-        color: "#111827",
-        "&:hover": { borderColor: "#6d28d9" },
-      }}
-    >
-      {label}
-    </Button>
+    <button className={styles.pill} type="button">
+      <AddIcon className={styles.pillIcon} />
+      <span>{label}</span>
+    </button>
   );
 }
