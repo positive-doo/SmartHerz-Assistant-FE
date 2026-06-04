@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import styles from "./LeftPane.module.css";
 import Tooltip from "@mui/material/Tooltip";
 import { useTranslation } from "../i18n/useTranslation";
+import { useAppUi } from "@/state/AppUiContext";
 
 const LOGO =
   "https://cybercompany.ai/wp-content/uploads/2026/05/smart-herz-logo-final.svg";
@@ -34,6 +35,11 @@ export default function LeftPane() {
   const [messages, setMessages] = useState<UserMessage[]>([]);
   const { t } = useTranslation();
   const hasText = message.trim().length > 0;
+  const {
+    hasUserStarted,
+    setHasUserStarted,
+    setSuggestionsByCategory,
+  } = useAppUi();
 
   const sendButtonTooltip = hasText
     ? t("sendButton")
@@ -43,12 +49,34 @@ export default function LeftPane() {
     const text = message.trim();
     if (!text) return;
 
-    setMessages((prev) => [
-      ...prev,
-      { id: crypto.randomUUID(), role: "user", text },
-    ]);
-
+    setMessages((prev) => [...prev, { id: crypto.randomUUID(), text }]);
     setMessage("");
+
+    if (!hasUserStarted) setHasUserStarted(true);
+
+    // ✅ MOCK rezultat (kasnije zamenjuješ backendom)
+    setSuggestionsByCategory({
+      pages: [
+        { id: "trebinje", categoryId: "pages", title: "Trebinje", description: "Kratak opis…", imageUrl: "/placeholders/trebinje.jpg" },
+        { id: "bileca", categoryId: "pages", title: "Bileća", description: "Kratak opis…", imageUrl: "/placeholders/bileca.jpg" },
+        { id: "gacko", categoryId: "pages", title: "Gacko", description: "Kratak opis…", imageUrl: "/placeholders/gacko.jpg" },
+        { id: "nevesinje", categoryId: "pages", title: "Nevesinje", description: "Kratak opis…", imageUrl: "/placeholders/nevesinje.jpg" },
+        { id: "pages_more", categoryId: "pages", title: "Još", description: "…", imageUrl: "/placeholders/trebinje.jpg" },
+      ],
+      events: [
+        { id: "event1", categoryId: "events", title: "Događaj 1", description: "Kratak opis…", imageUrl: "/placeholders/event.jpg" },
+        { id: "event2", categoryId: "events", title: "Događaj 2", description: "Kratak opis…", imageUrl: "/placeholders/event.jpg" },
+      ],
+      special_offers: [
+        { id: "offer1", categoryId: "special_offers", title: "Ponuda 1", description: "Kratak opis…", imageUrl: "/placeholders/offer.jpg" },
+      ],
+      poi: [
+        { id: "poi1", categoryId: "poi", title: "POI 1", description: "Kratak opis…", imageUrl: "/placeholders/poi.jpg" },
+      ],
+      news: [
+        { id: "news1", categoryId: "news", title: "Vijest 1", description: "Kratak opis…", imageUrl: "/placeholders/news.jpg" },
+      ],
+    });
   };
 
   return (

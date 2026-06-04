@@ -1,7 +1,7 @@
 .root {
   position: relative;
   height: 100%;
-  overflow: hidden;
+  overflow: visible;
   box-sizing: border-box;
 }
 
@@ -158,6 +158,32 @@
   line-height: 1;
   margin-bottom: 2px;
   transform: translateX(0.5px);
+}
+
+.sendButtonSend {
+  background: transparent;
+  border-radius: 4px;
+}
+
+.sendButtonMic {
+  background: transparent;
+  position: relative;
+  transform-origin: center;
+  transition: transform 160ms ease;
+}
+
+.sendButtonMic:hover {
+  transform: scale(1.12);
+}
+
+.sendButtonMic:hover .micImg {
+  animation: micPulse 650ms ease-in-out;
+}
+
+@keyframes micPulse {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.18); }
+  100% { transform: scale(1); }
 }
 
 .hint {

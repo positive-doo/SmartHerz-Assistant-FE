@@ -12,7 +12,13 @@ export const dictionary: Record<Lang, Record<string, string>> = {
     sendButton: "Pošalji poruku",
     recordButton: "Klikni da započneš snimanje",
     assistantIntro: "Zdravo, ja sam tvoj virtuelni savetnik za istraživanje Istočne Hercegovine. Reci mi više o aktivnostima koje te zanimaju, koju destinaciju želiš da posetiš i kada planiraš putovanje. Daću ti savete i preporuke koje će se prikazati na desnoj strani tvog ekrana.",
-    hint: "Molimo vas da ne unosite lične podatke (ime, prezime, email, broj telefona, itd.) u prozor za ćaskanje."
+    hint: "Molimo vas da ne unosite lične podatke (ime, prezime, email, broj telefona, itd.) u prozor za ćaskanje.",
+    categories: "Kategorije",
+    pages: "Stranice",
+    cat_events: "Događaji",
+    cat_pages: "Stranice",
+    clearFilters: "Ukloni filtere",
+    viewMore: "Pogledaj više",
   },
   en: {
     rightTitle: "AI assistant recommends",
@@ -25,7 +31,13 @@ export const dictionary: Record<Lang, Record<string, string>> = {
     sendButton: "Send message",
     recordButton: "Click to start recording",
     assistantIntro: "Hello, I'm your virtual assistant for exploring Eastern Herzegovina. Tell me more about the activities you're interested in, which destination you want to visit, and when you plan to travel. I'll provide you with tips and recommendations that will appear on the right side of your screen.",
-    hint: "Please do not enter personal information (name, surname, email, phone number, etc.) in the chat window."
+    hint: "Please do not enter personal information (name, surname, email, phone number, etc.) in the chat window.",
+    categories: "Categories",
+    pages: "Pages",
+    cat_events: "Events",
+    cat_pages: "Pages",
+    clearFilters: "Remove filters",
+    viewMore: "View more",
   },
 };
 

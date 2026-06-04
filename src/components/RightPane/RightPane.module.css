@@ -5,6 +5,13 @@
   font-family: var(--font-inter), sans-serif;
 }
 
+.titleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 .title {
   margin: 0 0 8px;
   font-size: 17px;
@@ -20,92 +27,6 @@
   margin-bottom: 16px;
   background-color: #a855f7;
   opacity: 0.6;
-}
-
-.filterHeader {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-
-.filterLabel {
-  margin-top: 20px;
-  color: #9F5FE9;
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1;
-  font-family: var(--font-inter), sans-serif;
-}
-
-.filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  max-width: 795px;
-}
-
-.pill:hover {
-  background-color: #9F5FE9;
-  color: #fff;
-}
-
-.eyeButton {
-  margin-top: 20px;
-  border: none;
-  background: transparent;
-  padding: 0;
-  margin-left: 1px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-}
-
-.eyeIcon {
-  color: #9F5FE9;
-  width: 14px;
-  height: 14px;
-}
-
-.pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 14px;
-  border: 1px solid #a855f7;
-  border-radius: 999px;
-  background: transparent;
-  color: #111827;
-  cursor: pointer;
-  font-family: var(--font-inter), sans-serif;
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1;
-  text-transform: none;
-  transition:
-    border-color 0.2s ease,
-    color 0.2s ease,
-    background-color 0.2s ease;
-}
-
-.pill:hover {
-  border-color: #6d28d9;
-}
-
-.pill:focus-visible {
-  outline: 2px solid rgba(109, 40, 217, 0.35);
-  outline-offset: 2px;
-}
-
-.pillIcon {
-  font-size: 18px !important;
-}
-
-.titleRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
 }
 
 /* zastavice */
@@ -131,4 +52,274 @@
 .langBtnActive {
   outline: 2px solid #9F5FE9;
   outline-offset: 2px;
+}
+
+.filterHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.filterLabel {
+  margin: 0; 
+  color: #9F5FE9;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  font-family: var(--font-inter), sans-serif;
+}
+
+.eyeButton {
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+}
+
+.eyeIcon {
+  color: #9F5FE9;
+  width: 14px;
+  height: 14px;
+  transform: translateY(1px); /* sitno poravnanje */
+}
+
+/* 3 filter pilla */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-width: 795px;
+  margin-bottom: 6px;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border: 1px solid #a855f7;
+  border-radius: 999px;
+  background: transparent;
+  color: #111827;
+  cursor: pointer;
+  font-family: var(--font-inter), sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  text-transform: none;
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.pill:hover {
+  border-color: #6d28d9;
+  background-color: #9F5FE9;
+  color: #fff;
+}
+
+.pill:focus-visible {
+  outline: 2px solid rgba(109, 40, 217, 0.35);
+  outline-offset: 2px;
+}
+
+.pillIcon {
+  font-size: 18px !important;
+}
+
+.sectionHeaderRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 15px;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 5px;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: #6d28d9;
+}
+
+.sectionTitleBig {
+  font-size: 14px;
+  font-weight: 800;
+  color: #111827;
+}
+
+/* Kategorije pillovi */
+.categoryChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.categoryChip {
+  border: 1px solid #a855f7;
+  background: transparent;
+  color: #111827;         /* ✅ crno */
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.categoryChipActive {
+  background: rgba(159, 95, 233, 0.12);
+  border-color: #9f5fe9;
+}
+
+/* ✅ Ukloni filtere pill */
+.clearChip {
+  background: #E9D2FF;
+  border-color: #E9D2FF;
+  color: #111827;
+}
+
+.clearChipX {
+  font-size: 16px;
+  line-height: 1;
+  font-weight: 900;
+  transform: translateY(-0.5px);
+}
+
+/* Predlozi po kategoriji */
+.categoryBlock {
+  margin-top: 12px;
+}
+
+.categoryBlockTitle {
+  font-size: 12px;
+  font-weight: 800;
+  color: #6d28d9;
+  margin: 8px 0;
+}
+
+/* Kartice */
+.cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.card {
+  display: flex;
+  gap: 15px;
+  padding: 15px;
+  border-radius: 10px;
+  border: 1px solid rgba(17, 24, 39, 0.08);
+  background: rgba(255, 255, 255, 0.8);
+  transition: box-shadow 180ms ease;
+}
+
+.card:hover {
+  box-shadow: 0 8px 22px rgba(17, 24, 39, 0.12);
+}
+
+.cardImageWrap {
+  width: 100px;
+  height: 90px;
+  overflow: hidden;
+  border-radius: 10px;
+  flex: 0 0 auto;
+}
+
+.cardImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1);
+  transition: transform 180ms ease;
+}
+
+/* Zoom na hover (može i .cardImageWrap:hover ako želiš) */
+.card:hover .cardImage {
+  transform: scale(1.08);
+}
+
+.cardBody {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cardTitle {
+  font-size: 13px;
+  font-weight: 800;
+  color: #111827;
+}
+
+.cardText {
+  font-size: 11px;
+  line-height: 1.35;
+  color: #374151;
+}
+
+.readMoreBtn {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  width: fit-content; 
+  border: 2px solid #9F5FE9;
+  background: transparent;
+  color: #9F5FE9;
+
+  border-radius: 999px;
+  padding: 6px 10px 6px 14px;
+
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+
+  cursor: pointer;
+  transition: background-color 180ms ease, color 180ms ease;
+}
+
+.readMoreIcon {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #9F5FE9;
+  color: #ffffff;
+
+  font-size: 14px;
+  line-height: 1;
+
+  transition: background-color 180ms ease, color 180ms ease;
+}
+
+.readMoreBtn:hover {
+  background: #9F5FE9;
+  color: #ffffff;
+}
+
+.readMoreBtn:hover .readMoreIcon {
+  background: #ffffff;
+  color: #9F5FE9;
 }
