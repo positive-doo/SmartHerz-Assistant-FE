@@ -104,96 +104,98 @@ export default function RightPane({ title }: RightPaneProps) {
 
       {hasUserStarted && (
         <>
-          <div className={styles.sectionHeaderRow}>
-            <span className={styles.filterLabel}>{t("categories")}</span>
+          <div className={styles.scrollArea}>
+            <div className={styles.sectionHeaderRow}>
+              <span className={styles.filterLabel}>{t("categories")}</span>
 
-            <button
-              type="button"
-              className={styles.eyeButton}
-              aria-label="Toggle category pills"
-              onClick={() => setShowCategoryPills((v) => !v)}
-            >
-              {showCategoryPills ? (
-                <VisibilityOffOutlinedIcon className={styles.eyeIcon} />
-              ) : (
-                <VisibilityOutlinedIcon className={styles.eyeIcon} />
-              )}
-            </button>
-          </div>
-
-          {showCategoryPills && (
-            <div className={styles.categoryChips}>
-              {sortedCategories.map((c) => {
-                const id = c.id as CategoryId;
-                const isActive = activeCategoryIds.includes(id);
-
-                return (
-                  <button
-                    key={c.id}
-                    type="button"
-                    className={`${styles.categoryChip} ${isActive ? styles.categoryChipActive : ""}`}
-                    onClick={() => toggleCategory(id)}
-                  >
-                    {getCategoryLabel(c)}
-                  </button>
-                );
-              })}
-
-              {activeCategoryIds.length > 0 && (
-                <button
-                  type="button"
-                  className={`${styles.categoryChip} ${styles.clearChip}`}
-                  onClick={clearCategories}
-                >
-                  <span className={styles.clearChipX}>×</span>
-                  {t("clearFilters")}
-                </button>
-              )}
+              <button
+                type="button"
+                className={styles.eyeButton}
+                aria-label="Toggle category pills"
+                onClick={() => setShowCategoryPills((v) => !v)}
+              >
+                {showCategoryPills ? (
+                  <VisibilityOffOutlinedIcon className={styles.eyeIcon} />
+                ) : (
+                  <VisibilityOutlinedIcon className={styles.eyeIcon} />
+                )}
+              </button>
             </div>
-          )}
 
-          {visibleCategoryIds.map((catId) => {
-            const list: Suggestion[] = suggestionsByCategory[catId] ?? [];
-            if (list.length === 0) return null;
+            {showCategoryPills && (
+              <div className={styles.categoryChips}>
+                {sortedCategories.map((c) => {
+                  const id = c.id as CategoryId;
+                  const isActive = activeCategoryIds.includes(id);
 
-            const preview = list.slice(0, 4);
-            const hasMore = list.length > 4;
-
-            const catLabel =
-              categories.find((c) => c.id === catId)?.label[lang] ??
-              categories.find((c) => c.id === catId)?.label.bh ??
-              (catId as string);
-
-            return (
-              <div key={catId} className={styles.categoryBlock}>
-                <div className={styles.categoryBlockTitle}>{catLabel as string}</div>
-
-                <div className={styles.cards}>
-                  {preview.map((p: Suggestion) => (
-                    <div key={p.id} className={styles.card}>
-                      <div className={styles.cardImageWrap}>
-                        <img className={styles.cardImage} src={p.imageUrl} alt="" />
-                      </div>
-
-                      <div className={styles.cardBody}>
-                        <div className={styles.cardTitle}>{p.title}</div>
-                        <div className={styles.cardText}>{p.description}</div>
-                      </div>
-                    </div>
-                  ))}
-
-                  {hasMore && (
-                    <button type="button" className={styles.readMoreBtn}>
-                      <span className={styles.readMoreText}>{t("viewMore")}</span>
-                      <span className={styles.readMoreIcon}>
-                        <KeyboardArrowRightIcon />
-                      </span>
+                  return (
+                    <button
+                      key={c.id}
+                      type="button"
+                      className={`${styles.categoryChip} ${isActive ? styles.categoryChipActive : ""}`}
+                      onClick={() => toggleCategory(id)}
+                    >
+                      {getCategoryLabel(c)}
                     </button>
-                  )}
-                </div>
+                  );
+                })}
+
+                {activeCategoryIds.length > 0 && (
+                  <button
+                    type="button"
+                    className={`${styles.categoryChip} ${styles.clearChip}`}
+                    onClick={clearCategories}
+                  >
+                    <span className={styles.clearChipX}>×</span>
+                    {t("clearFilters")}
+                  </button>
+                )}
               </div>
-            );
-          })}
+            )}
+
+            {visibleCategoryIds.map((catId) => {
+              const list: Suggestion[] = suggestionsByCategory[catId] ?? [];
+              if (list.length === 0) return null;
+
+              const preview = list.slice(0, 4);
+              const hasMore = list.length > 4;
+
+              const catLabel =
+                categories.find((c) => c.id === catId)?.label[lang] ??
+                categories.find((c) => c.id === catId)?.label.bh ??
+                (catId as string);
+
+              return (
+                <div key={catId} className={styles.categoryBlock}>
+                  <div className={styles.categoryBlockTitle}>{catLabel as string}</div>
+
+                  <div className={styles.cards}>
+                    {preview.map((p: Suggestion) => (
+                      <div key={p.id} className={styles.card}>
+                        <div className={styles.cardImageWrap}>
+                          <img className={styles.cardImage} src={p.imageUrl} alt="" />
+                        </div>
+
+                        <div className={styles.cardBody}>
+                          <div className={styles.cardTitle}>{p.title}</div>
+                          <div className={styles.cardText}>{p.description}</div>
+                        </div>
+                      </div>
+                    ))}
+
+                    {hasMore && (
+                      <button type="button" className={styles.readMoreBtn}>
+                        <span className={styles.readMoreText}>{t("viewMore")}</span>
+                        <span className={styles.readMoreIcon}>
+                          <KeyboardArrowRightIcon />
+                        </span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </>
       )}
     </div>

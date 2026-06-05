@@ -323,3 +323,23 @@
   background: #ffffff;
   color: #9F5FE9;
 }
+
+.scrollArea {
+  margin-top: 10px;
+  padding-right: 6px;
+  overflow-y: auto;
+  max-height: 710px;
+}
+
+.scrollArea::-webkit-scrollbar {
+  width: 8px;
+}
+
+.scrollArea::-webkit-scrollbar-thumb {
+  background: rgba(159, 95, 233, 0.35);
+  border-radius: 999px;
+}
+
+.scrollArea::-webkit-scrollbar-thumb:hover {
+  background: rgba(159, 95, 233, 0.55);
+}
