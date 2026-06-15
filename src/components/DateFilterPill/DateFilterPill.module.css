@@ -1,0 +1,239 @@
+.wrapper {
+  position: relative;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border: 1px solid #a855f7;
+  border-radius: 999px;
+  background: transparent;
+  color: #111827;
+  cursor: pointer;
+  font-family: var(--font-inter), sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  text-transform: none;
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.pill:hover {
+  border-color: #6d28d9;
+  background-color: #9F5FE9;
+  color: #fff;
+}
+
+.pill:focus-visible {
+  outline: 2px solid rgba(109, 40, 217, 0.35);
+  outline-offset: 2px;
+}
+
+.pillIcon {
+  font-size: 18px !important;
+}
+
+.pillActive {
+  background-color: var(--color-primary, #9F5FE9);
+  color: #fff;
+  border-color: transparent;
+}
+
+.pillActive .pillIcon {
+  color: #fff;
+}
+
+/* Popover */
+.popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 1300;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.14);
+  padding: 16px;
+  min-width: max-content;
+}
+
+.calendars {
+  display: flex;
+  gap: 0;
+  align-items: flex-start;
+}
+
+.divider {
+  width: 1px;
+  background: #eee;
+  align-self: stretch;
+  margin: 0 12px;
+}
+
+/* Jedan kalendar */
+.calendar {
+  width: 252px;
+}
+
+.calLabel {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #888;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.calHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.monthTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #222;
+}
+
+.navBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  color: #555;
+  padding: 2px 8px;
+  border-radius: 6px;
+  line-height: 1;
+}
+.navBtn:hover { background: #f0f0f0; }
+
+/* Grid */
+.dayGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.dayName {
+  font-size: 11px;
+  font-weight: 600;
+  color: #aaa;
+  text-align: center;
+  padding: 4px 0;
+}
+
+.day {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  color: #333;
+  border: none;
+  background: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+}
+.day:hover:not(.disabled) { background: #e3f0ff; }
+
+.today { font-weight: 700; color: #9F5FE9; }
+.selected { background: #9F5FE9 !important; color: #fff !important; border-radius: 50%; }
+.disabled { color: #ccc; cursor: default; }
+
+.inRange {
+  background: #e3f0ff;
+  border-radius: 0;
+}
+.rangeStart {
+  background: #9F5FE9 !important;
+  color: #fff !important;
+  border-radius: 50% 0 0 50%;
+}
+.rangeEnd {
+  background: #9F5FE9 !important;
+  color: #fff !important;
+  border-radius: 0 50% 50% 0;
+}
+
+/* Footer */
+.footer {
+  margin-top: 12px;
+  display: flex;
+  justify-content: flex-end;
+  border-top: 1px solid #eee;
+  padding-top: 10px;
+}
+
+.clearBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  color: #999;
+  text-decoration: underline;
+}
+.clearBtn:hover { color: #555; }
+
+@media (max-width: 1400px) {
+  .popover {
+    left: auto;
+    right: 0;  /* poravnaj na desnu ivicu dugmeta */
+  }
+
+  .calendar {
+    width: 220px;
+  }
+
+  .dayGrid {
+    gap: 1px;
+  }
+
+  .day {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 1280px) {
+  .popover {
+    left: calc(100% - 300px);
+    right: 0;
+    padding: 12px;
+  }
+
+  .calendars {
+    gap: 0;
+  }
+
+  .divider {
+    margin: 0 8px;
+  }
+
+  .calendar {
+    width: 200px;
+  }
+
+  .day {
+    font-size: 11px;
+  }
+
+  .monthTitle {
+    font-size: 13px;
+  }
+
+  .calLabel {
+    font-size: 10px;
+  }
+
+  .navBtn {
+    font-size: 15px;
+    padding: 2px 5px;
+  }
+}

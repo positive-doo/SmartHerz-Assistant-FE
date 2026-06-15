@@ -193,6 +193,12 @@
   color: #111827;
 }
 
+.pill.clearTopChip {
+  background: #E9D2FF;
+  border-color: #E9D2FF;
+  color: #111827;
+}
+
 .clearChipX {
   font-size: 16px;
   line-height: 1;

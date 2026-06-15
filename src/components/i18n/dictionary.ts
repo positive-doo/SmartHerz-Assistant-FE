@@ -19,6 +19,11 @@ export const dictionary: Record<Lang, Record<string, string>> = {
     cat_pages: "Stranice",
     clearFilters: "Ukloni filtere",
     viewMore: "Pogledaj više",
+    dateFrom: "Datum od",
+    dateTo: "Datum do",
+    clearDates: "Obriši datume",
+    monthNames: "Januar|Februar|Mart|April|Maj|Jun|Jul|Avgust|Septembar|Oktobar|Novembar|Decembar",
+    dayNames: "Po|Ut|Sr|Če|Pe|Su|Ne",
   },
   en: {
     rightTitle: "AI assistant recommends",
@@ -38,6 +43,11 @@ export const dictionary: Record<Lang, Record<string, string>> = {
     cat_pages: "Pages",
     clearFilters: "Remove filters",
     viewMore: "View more",
+    dateFrom: "Start date",
+    dateTo: "End date",
+    clearDates: "Clear dates",
+    monthNames: "January|February|March|April|May|June|July|August|September|October|November|December",
+    dayNames: "Mo|Tu|We|Th|Fr|Sa|Su",
   },
 };
 

@@ -13,6 +13,8 @@ import { useAppUi } from "@/state/AppUiContext";
 import { categories } from "@/data/categories";
 import type { Category } from "@/models/category";
 import type { CategoryId, Suggestion } from "@/state/AppUiContext";
+import DateFilterPill from "../DateFilterPill/DateFilterPill";
+import { Dayjs } from "dayjs";
 
 type RightPaneProps = {
   title?: string;
@@ -21,6 +23,9 @@ type RightPaneProps = {
 export default function RightPane({ title }: RightPaneProps) {
   const { t } = useTranslation();
   const { lang, setLang } = useLang();
+  const [dateRange, setDateRange] = useState<[Dayjs | null, Dayjs | null]>([null, null]);
+  const hasDateFilter = Boolean(dateRange[0] || dateRange[1]);
+  const hasAnyTopFilter = hasDateFilter;
 
   const {
     hasUserStarted,
@@ -96,9 +101,31 @@ export default function RightPane({ title }: RightPaneProps) {
 
       {showFilterPills && (
         <div className={styles.filters}>
-          {filterLabels.map((label) => (
-            <FilterPill key={label} label={label} />
-          ))}
+          {filterLabels.map((label) =>
+            label === t("date") ? (
+              <DateFilterPill
+                key={label}
+                label={label}
+                value={dateRange}
+                onChange={setDateRange}
+              />
+            ) : (
+              <FilterPill key={label} label={label} />
+            )
+          )}
+
+          {hasAnyTopFilter && (
+            <button
+              type="button"
+              className={`${styles.pill} ${styles.clearTopChip}`}
+              onClick={() => {
+                setDateRange([null, null]);
+              }}
+            >
+              <span className={styles.clearChipX}>×</span>
+              {t("clearFilters")}
+            </button>
+          )}
         </div>
       )}
 
