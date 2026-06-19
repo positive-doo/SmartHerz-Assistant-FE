@@ -12,6 +12,7 @@ import { categories } from "@/data/categories";
 import type { Category } from "@/models/category";
 import type { CategoryId, Suggestion } from "@/state/AppUiContext";
 import { useAppUi } from "@/state/AppUiContext";
+import { getPublicAssetPath } from "@/utils/getPublicAssetPath";
 import DateFilterPill from "../DateFilterPill/DateFilterPill";
 
 type RightPaneProps = {
@@ -83,7 +84,7 @@ export default function RightPane({ title }: RightPaneProps) {
             aria-label="Bosanski"
             title="Bosanski"
           >
-            <img src="/BH.png" alt="BH" width={26} height={26} />
+            <img src={getPublicAssetPath("/BH.png")} alt="BH" width={26} height={26} />
           </button>
 
           <button
@@ -93,7 +94,7 @@ export default function RightPane({ title }: RightPaneProps) {
             aria-label="English"
             title="English"
           >
-            <img src="/EN.png" alt="EN" width={26} height={26} />
+            <img src={getPublicAssetPath("/EN.png")} alt="EN" width={26} height={26} />
           </button>
         </div>
       </div>

@@ -13,7 +13,7 @@ import {
   useAppUi,
 } from "@/state/AppUiContext";
 
-const CHAT_API_BASE_URL = "http://localhost:8000";
+const CHAT_API_BASE_URL = process.env.NEXT_PUBLIC_CHAT_URL || "http://localhost:8000";
 
 const LOGO =
   "https://cybercompany.ai/wp-content/uploads/2026/05/smart-herz-logo-final.svg";

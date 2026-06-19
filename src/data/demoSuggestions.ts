@@ -5,6 +5,7 @@ import type {
   SuggestionsByCategory,
 } from "@/state/AppUiContext";
 import { createEmptySuggestions } from "@/state/AppUiContext";
+import { getPublicAssetPath } from "@/utils/getPublicAssetPath";
 
 type SuggestionCatalogItem = Suggestion & {
   keywords: string[];
@@ -25,7 +26,7 @@ const suggestionCatalog: SuggestionCatalogItem[] = [
       "Trebinje osvaja toplom atmosferom, mediteranskom klimom i starim gradom uz Trebišnjicu. Posjeta donosi spoj znamenitosti, gostoprimstva i ugodnog boravka tokom cijele godine.",
       "According to many, Trebinje is the most beautiful Serbian city, and what definitely adorns it is the real homely atmosphere and great Mediterranean climate. What to see in Trebinje is a question we often get, so we tried to answer it through this article. A trip to Trebinje means visiting beautiful sights, but above all warm hospitality, characteristic of these regions. Of course, there are also pleasant temperatures that make tourists love to visit this city in Republika Srpska all year round."
     ),
-    imageUrl: "/demo/trebinje.png",
+    imageUrl: getPublicAssetPath("/demo/trebinje.png"),
     keywords: ["trebinje", "trebisnjica"],
     order: 1,
   },
@@ -37,7 +38,7 @@ const suggestionCatalog: SuggestionCatalogItem[] = [
       "Manastir Tvrdoš je najstariji živi manastir u današnjoj Hercegovini. Nalazi se na oko 270 m nadmorske visine, a njegova crkva je na vrhu stijene, koja se nekad u okomitim stepenicama spuštala prema dvadesetak metara nižoj Trebišnjici. Danas taj istaknuti položaj nije tako upadljiv zbog zgrada koje su zaklonile litice s južne strane. Sa zapadne i istočne strane također su bile strme padine, te se samo sa sjevera moglo jednostavno prići crkvi.",
       "Tvrdoš Monastery is the oldest active monastery in present-day Herzegovina. It stands at about 270 meters above sea level, and its church sits on top of a rock that once descended in steep steps toward the Trebišnjica River, around twenty meters below. Today, that prominent position is less striking because buildings have screened the cliffs on the southern side. There were also steep slopes on the western and eastern sides, so the church could be approached easily only from the north."
     ),
-    imageUrl: "/demo/manastir.png",
+    imageUrl: getPublicAssetPath("/demo/manastir.png"),
     keywords: [
       "manastir",
       "manastir tvrdos",
@@ -55,7 +56,7 @@ const suggestionCatalog: SuggestionCatalogItem[] = [
       "Stari most, poznat i kao Mostarski most, obnovljeni je osmanski most iz 16. stoljeća u gradu Mostaru u Bosni i Hercegovini. Prelazi preko rijeke Neretve i povezuje dva dijela grada, koji je ime dobio po mostarima, čuvarima koji su tokom osmanskog perioda čuvali Stari most.",
       "Stari Most, also known as Mostar Bridge, is a rebuilt 16th-century Ottoman bridge in the city of Mostar in Bosnia and Herzegovina. It crosses the river Neretva and connects the two parts of the city, which is named after the bridge keepers who guarded the Stari Most during the Ottoman era."
     ),
-    imageUrl: "/demo/stari-most.png",
+    imageUrl: getPublicAssetPath("/demo/stari-most.png"),
     keywords: ["stari most", "old bridge"],
     order: 3,
   },
@@ -67,7 +68,7 @@ const suggestionCatalog: SuggestionCatalogItem[] = [
       "U dolini rijeke Neretve, okružen trima planinama, smješten je Mostar, ekonomski, kulturni, univerzitetski, historijski i turistički centar Hercegovine. Grad je nastao oko Starog mosta, podignutog još 1566. godine, koji je i danas najveća turistička atrakcija Mostara i Hercegovine. Mostar je nesumnjivo jedan od najvećih turističkih centara Balkana.",
       "Located in the Neretva River valley and surrounded by three mountains, Mostar is the economic, cultural, university, historical, and tourist center of Herzegovina. The city developed around the Old Bridge, built as early as 1566, which remains the greatest tourist attraction of Mostar and Herzegovina today. Mostar is undoubtedly one of the largest tourist centers in the Balkans."
     ),
-    imageUrl: "/demo/mostar.png",
+    imageUrl: getPublicAssetPath("/demo/mostar.png"),
     keywords: ["mostar"],
     order: 4,
   },
@@ -79,7 +80,7 @@ const suggestionCatalog: SuggestionCatalogItem[] = [
       "Centralna lokacija u Trebinju. Praktičan izbor ako želiš večeru i večernju šetnju bez dodatne vožnje.",
       "A central Trebinje stay that works well if you want dinner and evening walks without extra driving."
     ),
-    imageUrl: "/demo/hotel-apis.jpg",
+    imageUrl: getPublicAssetPath("/demo/hotel-apis.jpg"),
     keywords: ["hotel apis", "apis"],
     order: 1,
   },
@@ -91,7 +92,7 @@ const suggestionCatalog: SuggestionCatalogItem[] = [
       "Smještaj i restoran uz Trebišnjicu, sa više atmosfere i dobrim ritmom za sporiji dan pored vode.",
       "A stay-and-lunch option by the Trebišnjica river with more atmosphere and a slower pace by the water."
     ),
-    imageUrl: "/demo/jazina-club.jpg",
+    imageUrl: getPublicAssetPath("/demo/jazina-club.jpg"),
     keywords: ["jazina club", "jazina"],
     order: 2,
   },
@@ -103,7 +104,7 @@ const suggestionCatalog: SuggestionCatalogItem[] = [
       "Vinarija Bojanić, smještena u Pridvorcima kod Trebinja, nudi ugodnu atmosferu, obilazak vinarije i degustaciju lokalnih vina. Dobra je stanica za parove i sve koji žele mirniji hercegovački vinski doživljaj.",
       "'Bojanić' winery, located in Pridvorci near Trebinje, offers a welcoming atmosphere, winery tours, and tastings of local wines. It is a strong stop for couples and for anyone looking for a calmer Herzegovinian wine experience."
     ),
-    imageUrl: "/demo/vinarija-bojanic.png",
+    imageUrl: getPublicAssetPath("/demo/vinarija-bojanic.png"),
     keywords: ["vinarija bojanic", "bojanic winery", "bojanic", "vinarija"],
     order: 3,
   },
@@ -118,7 +119,7 @@ const suggestionCatalog: SuggestionCatalogItem[] = [
       "Trebinje, šetnja starim gradom, pogled s Gračanice i večera uz rijeku za opušten ritam za parove.",
       "Trebinje, an old-town walk, a viewpoint stop, and a riverside dinner for a relaxed couple rhythm."
     ),
-    imageUrl: "/demo/trebisnjica.jpg",
+    imageUrl: getPublicAssetPath("/demo/trebisnjica.jpg"),
     keywords: ["couple", "romantic", "par", "parovski", "trebinje", "gracanica"],
     order: 1,
   },
@@ -130,7 +131,7 @@ const suggestionCatalog: SuggestionCatalogItem[] = [
       "Tvrdoš, Bojanić i ručak u Jazini za dan s malo vožnje i puno ugođaja.",
       "Tvrdoš, Bojanić, and lunch at Jazina for a day with less driving and more atmosphere."
     ),
-    imageUrl: "/demo/vinarija-bojanic.png",
+    imageUrl: getPublicAssetPath("/demo/vinarija-bojanic.png"),
     keywords: ["tvrdos", "bojanic", "jazina", "wine", "vino", "rucak"],
     order: 2,
   },
@@ -142,7 +143,7 @@ const suggestionCatalog: SuggestionCatalogItem[] = [
       "Kravice i Mostar kao aktivnija dnevna opcija ako želite sadržajniji izlet.",
       "Kravice and Mostar as a more active day-trip option if you want one fuller excursion."
     ),
-    imageUrl: "/demo/mostar.png",
+    imageUrl: getPublicAssetPath("/demo/mostar.png"),
     keywords: ["mostar", "stari most", "kravice", "hutovo blato", "izlet"],
     order: 3,
   },

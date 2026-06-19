@@ -1,4 +1,5 @@
 import type { PageItem } from "@/models/pageItem";
+import { getPublicAssetPath } from "@/utils/getPublicAssetPath";
 
 export const pageItems: PageItem[] = [
   {
@@ -9,7 +10,7 @@ export const pageItems: PageItem[] = [
       bh: "Trebinje je jedan od najljepših gradova na jugu Hercegovine...",
       en: "Trebinje is one of the most beautiful towns in southern Herzegovina...",
     },
-    imageUrl: "/placeholders/trebinje.jpg",
+    imageUrl: getPublicAssetPath("/placeholders/trebinje.jpg"),
     order: 1,
   },
   {
@@ -20,7 +21,7 @@ export const pageItems: PageItem[] = [
       bh: "Bileća je miran hercegovački grad smješten uz obalu Bilećkog jezera...",
       en: "Bileća is a calm town by Bileća Lake...",
     },
-    imageUrl: "/placeholders/bileca.jpg",
+    imageUrl: getPublicAssetPath("/placeholders/bileca.jpg"),
     order: 2,
   },
   {
@@ -31,7 +32,7 @@ export const pageItems: PageItem[] = [
       bh: "Gacko je hercegovački grad smješten u prostranoj Gatačkoj dolini...",
       en: "Gacko is located in the spacious Gacko valley...",
     },
-    imageUrl: "/placeholders/gacko.jpg",
+    imageUrl: getPublicAssetPath("/placeholders/gacko.jpg"),
     order: 3,
   },
   {
@@ -42,7 +43,7 @@ export const pageItems: PageItem[] = [
       bh: "Nevesinje je grad smješten na širokoj Nevesinjskoj visoravni...",
       en: "Nevesinje lies on the wide Nevesinje plateau...",
     },
-    imageUrl: "/placeholders/nevesinje.jpg",
+    imageUrl: getPublicAssetPath("/placeholders/nevesinje.jpg"),
     order: 4,
   },
 ];

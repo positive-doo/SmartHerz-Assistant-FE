@@ -1,7 +1,6 @@
 "use client";
 
 import React, { createContext, useContext, useMemo, useState, useEffect } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 export type Lang = "bh" | "en";
 
@@ -12,27 +11,47 @@ type LanguageContextValue = {
 
 const LanguageContext = createContext<LanguageContextValue | null>(null);
 
+const resolveLang = (value: string | null | undefined): Lang =>
+  value === "en" ? "en" : "bh";
+
+const getLangFromLocation = (): Lang => {
+  if (typeof window === "undefined") {
+    return "bh";
+  }
+
+  return resolveLang(new URLSearchParams(window.location.search).get("lang"));
+};
+
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const pathname = usePathname();
+  const [lang, setLangState] = useState<Lang>("bh");
 
-  const urlLang = (searchParams.get("lang") as Lang) || "bh";
-  const [lang, setLangState] = useState<Lang>(urlLang === "en" ? "en" : "bh");
-
-  // sync state if user manually changes URL
   useEffect(() => {
-    const next = urlLang === "en" ? "en" : "bh";
-    setLangState(next);
-  }, [urlLang]);
+    const syncLangFromUrl = () => {
+      setLangState(getLangFromLocation());
+    };
+
+    syncLangFromUrl();
+    window.addEventListener("popstate", syncLangFromUrl);
+
+    return () => {
+      window.removeEventListener("popstate", syncLangFromUrl);
+    };
+  }, []);
 
   const setLang = (nextLang: Lang) => {
     setLangState(nextLang);
 
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("lang", nextLang);
+    if (typeof window === "undefined") {
+      return;
+    }
 
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    const nextUrl = new URL(window.location.href);
+    nextUrl.searchParams.set("lang", nextLang);
+    window.history.replaceState(
+      window.history.state,
+      "",
+      `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`
+    );
   };
 
   const value = useMemo(() => ({ lang, setLang }), [lang]);
