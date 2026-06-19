@@ -14,7 +14,6 @@ import { categories } from "@/data/categories";
 import type { Category } from "@/models/category";
 import type { CategoryId, Suggestion } from "@/state/AppUiContext";
 import DateFilterPill from "../DateFilterPill/DateFilterPill";
-import { Dayjs } from "dayjs";
 
 type RightPaneProps = {
   title?: string;
@@ -23,17 +22,17 @@ type RightPaneProps = {
 export default function RightPane({ title }: RightPaneProps) {
   const { t } = useTranslation();
   const { lang, setLang } = useLang();
-  const [dateRange, setDateRange] = useState<[Dayjs | null, Dayjs | null]>([null, null]);
-  const hasDateFilter = Boolean(dateRange[0] || dateRange[1]);
-  const hasAnyTopFilter = hasDateFilter;
-
   const {
     hasUserStarted,
+    dateRange,
+    setDateRange,
     activeCategoryIds,
     toggleCategory,
     clearCategories,
     suggestionsByCategory,
   } = useAppUi();
+  const hasDateFilter = Boolean(dateRange[0] || dateRange[1]);
+  const hasAnyTopFilter = hasDateFilter;
 
   const [showFilterPills, setShowFilterPills] = useState(true);
   const [showCategoryPills, setShowCategoryPills] = useState(true);

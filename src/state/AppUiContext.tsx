@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useMemo, useState } from "react";
+import type { Dayjs } from "dayjs";
 
 export type CategoryId = "pages" | "events" | "special_offers" | "poi" | "news";
 
@@ -18,6 +19,9 @@ type AppUiState = {
   hasUserStarted: boolean;
   setHasUserStarted: (v: boolean) => void;
 
+  dateRange: [Dayjs | null, Dayjs | null];
+  setDateRange: (range: [Dayjs | null, Dayjs | null]) => void;
+
   activeCategoryIds: CategoryId[];
   toggleCategory: (id: CategoryId) => void;
   clearCategories: () => void;
@@ -30,6 +34,10 @@ const AppUiContext = createContext<AppUiState | null>(null);
 
 export function AppUiProvider({ children }: { children: React.ReactNode }) {
   const [hasUserStarted, setHasUserStarted] = useState(false);
+  const [dateRange, setDateRange] = useState<[Dayjs | null, Dayjs | null]>([
+    null,
+    null,
+  ]);
 
   // ✅ multi-select state
   const [activeCategoryIds, setActiveCategoryIds] = useState<CategoryId[]>([]);
@@ -56,13 +64,15 @@ export function AppUiProvider({ children }: { children: React.ReactNode }) {
     () => ({
       hasUserStarted,
       setHasUserStarted,
+      dateRange,
+      setDateRange,
       activeCategoryIds,
       toggleCategory,
       clearCategories,
       suggestionsByCategory,
       setSuggestionsByCategory,
     }),
-    [hasUserStarted, activeCategoryIds, suggestionsByCategory]
+    [hasUserStarted, dateRange, activeCategoryIds, suggestionsByCategory]
   );
 
   return <AppUiContext.Provider value={value}>{children}</AppUiContext.Provider>;
