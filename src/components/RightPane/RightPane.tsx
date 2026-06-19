@@ -2,17 +2,16 @@
 
 import { useMemo, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
-import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
+import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
-import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
+import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import styles from "./RightPane.module.css";
 import { useLang } from "@/components/i18n/LanguageProvider";
 import { useTranslation } from "@/components/i18n/useTranslation";
-import { useAppUi } from "@/state/AppUiContext";
-
 import { categories } from "@/data/categories";
 import type { Category } from "@/models/category";
 import type { CategoryId, Suggestion } from "@/state/AppUiContext";
+import { useAppUi } from "@/state/AppUiContext";
 import DateFilterPill from "../DateFilterPill/DateFilterPill";
 
 type RightPaneProps = {
@@ -24,6 +23,7 @@ export default function RightPane({ title }: RightPaneProps) {
   const { lang, setLang } = useLang();
   const {
     hasUserStarted,
+    isAssistantResponding,
     dateRange,
     setDateRange,
     activeCategoryIds,
@@ -31,26 +31,44 @@ export default function RightPane({ title }: RightPaneProps) {
     clearCategories,
     suggestionsByCategory,
   } = useAppUi();
+
   const hasDateFilter = Boolean(dateRange[0] || dateRange[1]);
   const hasAnyTopFilter = hasDateFilter;
-
   const [showFilterPills, setShowFilterPills] = useState(true);
   const [showCategoryPills, setShowCategoryPills] = useState(true);
   const filterLabels = [t("destination"), t("date"), t("interest")];
+
   const sortedCategories = useMemo(
     () => categories.slice().sort((a, b) => a.order - b.order),
     []
   );
 
-  const allCategoryIds = useMemo(
-    () => sortedCategories.map((c) => c.id as CategoryId),
-    [sortedCategories]
+  const availableCategories = useMemo(
+    () =>
+      sortedCategories.filter(
+        (category) =>
+          (suggestionsByCategory[category.id as CategoryId] ?? []).length > 0
+      ),
+    [sortedCategories, suggestionsByCategory]
+  );
+
+  const availableCategoryIds = useMemo(
+    () => availableCategories.map((category) => category.id as CategoryId),
+    [availableCategories]
+  );
+
+  const selectedCategoryIds = activeCategoryIds.filter((categoryId) =>
+    availableCategoryIds.includes(categoryId)
   );
 
   const visibleCategoryIds: CategoryId[] =
-    activeCategoryIds.length > 0 ? activeCategoryIds : allCategoryIds;
+    selectedCategoryIds.length > 0 ? selectedCategoryIds : availableCategoryIds;
+  const hasVisibleSuggestions = visibleCategoryIds.length > 0;
+  const recommendationsLoadingLabel =
+    lang === "en" ? "Preparing recommendations" : "Pripremam preporuke";
 
-  const getCategoryLabel = (c: Category) => c.label[lang] ?? c.label.bh ?? c.id;
+  const getCategoryLabel = (category: Category) =>
+    category.label[lang] ?? category.label.bh ?? category.id;
 
   return (
     <div className={styles.root}>
@@ -88,7 +106,7 @@ export default function RightPane({ title }: RightPaneProps) {
           type="button"
           className={styles.eyeButton}
           aria-label="Toggle filter pills"
-          onClick={() => setShowFilterPills((v) => !v)}
+          onClick={() => setShowFilterPills((value) => !value)}
         >
           {showFilterPills ? (
             <VisibilityOffOutlinedIcon className={styles.eyeIcon} />
@@ -121,7 +139,7 @@ export default function RightPane({ title }: RightPaneProps) {
                 setDateRange([null, null]);
               }}
             >
-              <span className={styles.clearChipX}>×</span>
+              <span className={styles.clearChipX}>&times;</span>
               {t("clearFilters")}
             </button>
           )}
@@ -129,8 +147,7 @@ export default function RightPane({ title }: RightPaneProps) {
       )}
 
       {hasUserStarted && (
-        <>
-          <div className={styles.scrollArea}>
+        <div className={styles.scrollArea}>
           <div className={styles.sectionHeaderRow}>
             <span className={styles.filterLabel}>{t("categories")}</span>
 
@@ -138,7 +155,7 @@ export default function RightPane({ title }: RightPaneProps) {
               type="button"
               className={styles.eyeButton}
               aria-label="Toggle category pills"
-              onClick={() => setShowCategoryPills((v) => !v)}
+              onClick={() => setShowCategoryPills((value) => !value)}
             >
               {showCategoryPills ? (
                 <VisibilityOffOutlinedIcon className={styles.eyeIcon} />
@@ -150,64 +167,114 @@ export default function RightPane({ title }: RightPaneProps) {
 
           {showCategoryPills && (
             <div className={styles.categoryChips}>
-              {sortedCategories.map((c) => {
-                const id = c.id as CategoryId;
-                const isActive = activeCategoryIds.includes(id);
+              {availableCategories.map((category) => {
+                const id = category.id as CategoryId;
+                const isActive = selectedCategoryIds.includes(id);
 
                 return (
                   <button
-                    key={c.id}
+                    key={category.id}
                     type="button"
                     className={`${styles.categoryChip} ${isActive ? styles.categoryChipActive : ""}`}
                     onClick={() => toggleCategory(id)}
                   >
-                    {getCategoryLabel(c)}
+                    {getCategoryLabel(category)}
                   </button>
                 );
               })}
 
-              {activeCategoryIds.length > 0 && (
+              {selectedCategoryIds.length > 0 && (
                 <button
                   type="button"
                   className={`${styles.categoryChip} ${styles.clearChip}`}
                   onClick={clearCategories}
                 >
-                  <span className={styles.clearChipX}>×</span>
+                  <span className={styles.clearChipX}>&times;</span>
                   {t("clearFilters")}
                 </button>
               )}
             </div>
           )}
 
-          {visibleCategoryIds.map((catId) => {
-            const list: Suggestion[] = suggestionsByCategory[catId] ?? [];
-            if (list.length === 0) return null;
+          {isAssistantResponding && (
+            <>
+              <div
+                className={`${styles.loadingState} ${
+                  hasVisibleSuggestions ? styles.loadingStateCompact : ""
+                }`}
+                role="status"
+                aria-live="polite"
+              >
+                <span className={styles.loadingPulse} aria-hidden="true" />
+                <div className={styles.loadingCopy}>
+                  <div className={styles.loadingTitle}>
+                    {recommendationsLoadingLabel}
+                  </div>
+                </div>
+              </div>
 
-            const preview = list.slice(0, 4);
-            const hasMore = list.length > 4;
-
-            const catLabel =
-              categories.find((c) => c.id === catId)?.label[lang] ??
-              categories.find((c) => c.id === catId)?.label.bh ??
-              (catId as string);
-
-            return (
-              <div key={catId} className={styles.categoryBlock}>
-                <div className={styles.categoryBlockTitle}>{catLabel as string}</div>
-
-                <div className={styles.cards}>
-                  {preview.map((p: Suggestion) => (
-                    <div key={p.id} className={styles.card}>
-                      <div className={styles.cardImageWrap}>
-                        <img className={styles.cardImage} src={p.imageUrl} alt="" />
-                      </div>
-
-                      <div className={styles.cardBody}>
-                        <div className={styles.cardTitle}>{p.title}</div>
-                        <div className={styles.cardText}>{p.description}</div>
+              {!hasVisibleSuggestions && (
+                <div className={styles.loadingCards} aria-hidden="true">
+                  {[0, 1].map((index) => (
+                    <div key={index} className={styles.loadingCard}>
+                      <div className={styles.loadingThumb} />
+                      <div className={styles.loadingBody}>
+                        <div className={`${styles.loadingLine} ${styles.loadingLineShort}`} />
+                        <div className={styles.loadingLine} />
+                        <div className={`${styles.loadingLine} ${styles.loadingLineShort}`} />
                       </div>
                     </div>
                   ))}
+                </div>
+              )}
+            </>
+          )}
+
+          {visibleCategoryIds.map((categoryId) => {
+            const list: Suggestion[] = suggestionsByCategory[categoryId] ?? [];
+            if (list.length === 0) {
+              return null;
+            }
+
+            const preview = list.slice(0, 4);
+            const hasMore = list.length > 4;
+            const categoryLabel =
+              categories.find((category) => category.id === categoryId)?.label[lang] ??
+              categories.find((category) => category.id === categoryId)?.label.bh ??
+              categoryId;
+
+            return (
+              <div key={categoryId} className={styles.categoryBlock}>
+                <div className={styles.categoryBlockTitle}>
+                  {categoryLabel as string}
+                </div>
+
+                <div className={styles.cards}>
+                  {preview.map((suggestion) => {
+                    const cardTitle =
+                      suggestion.title[lang] ?? suggestion.title.bh ?? suggestion.id;
+                    const cardDescription =
+                      suggestion.description[lang] ??
+                      suggestion.description.bh ??
+                      "";
+
+                    return (
+                      <div key={suggestion.id} className={styles.card}>
+                        <div className={styles.cardImageWrap}>
+                          <img
+                            className={styles.cardImage}
+                            src={suggestion.imageUrl}
+                            alt={cardTitle}
+                          />
+                        </div>
+
+                        <div className={styles.cardBody}>
+                          <div className={styles.cardTitle}>{cardTitle}</div>
+                          <div className={styles.cardText}>{cardDescription}</div>
+                        </div>
+                      </div>
+                    );
+                  })}
 
                   {hasMore && (
                     <button type="button" className={styles.readMoreBtn}>
@@ -221,8 +288,7 @@ export default function RightPane({ title }: RightPaneProps) {
               </div>
             );
           })}
-          </div>
-        </>
+        </div>
       )}
     </div>
   );

@@ -43,6 +43,8 @@
   flex: 1 1 auto;
   width: min(100%, 760px);
   min-width: 0;
+  --chat-composer-gap: 24px;
+  --messages-bottom-padding: 32px;
 }
 
 .assistantBubbleWrap {
@@ -177,6 +179,7 @@
 .inputBlock {
   display: flex;
   flex-direction: column;
+  margin-top: var(--chat-composer-gap);
   margin-left: 129px;
   gap: 8px;
   max-width: 550px;
@@ -349,8 +352,8 @@
   flex-direction: column;
   gap: 20px;
   width: 100%;
-  padding: 0 38px 40px 34px;
-  max-height: 775px;
+  padding: 0 38px var(--messages-bottom-padding) 34px;
+  max-height: calc(775px - var(--chat-composer-gap));
   overflow-y: auto;
   overflow-x: hidden;
   scrollbar-gutter: stable;
@@ -442,8 +445,8 @@
   }
 
   .messages {
-    max-height: 46vh;
-    padding: 0 18px 32px 18px;
+    max-height: calc(46vh - var(--chat-composer-gap));
+    padding: 0 18px var(--messages-bottom-padding) 18px;
   }
 
   .assistantBubble::before,

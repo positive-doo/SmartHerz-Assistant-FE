@@ -2,22 +2,33 @@
 
 import React, { createContext, useContext, useMemo, useState } from "react";
 import type { Dayjs } from "dayjs";
+import type { LocalizedString } from "@/models/category";
 
 export type CategoryId = "pages" | "events" | "special_offers" | "poi" | "news";
 
 export type Suggestion = {
   id: string;
   categoryId: CategoryId;
-  title: string;
-  description: string;
+  title: LocalizedString;
+  description: LocalizedString;
   imageUrl: string;
 };
 
 export type SuggestionsByCategory = Record<CategoryId, Suggestion[]>;
 
+export const createEmptySuggestions = (): SuggestionsByCategory => ({
+  pages: [],
+  events: [],
+  special_offers: [],
+  poi: [],
+  news: [],
+});
+
 type AppUiState = {
   hasUserStarted: boolean;
   setHasUserStarted: (v: boolean) => void;
+  isAssistantResponding: boolean;
+  setIsAssistantResponding: (v: boolean) => void;
 
   dateRange: [Dayjs | null, Dayjs | null];
   setDateRange: (range: [Dayjs | null, Dayjs | null]) => void;
@@ -34,6 +45,7 @@ const AppUiContext = createContext<AppUiState | null>(null);
 
 export function AppUiProvider({ children }: { children: React.ReactNode }) {
   const [hasUserStarted, setHasUserStarted] = useState(false);
+  const [isAssistantResponding, setIsAssistantResponding] = useState(false);
   const [dateRange, setDateRange] = useState<[Dayjs | null, Dayjs | null]>([
     null,
     null,
@@ -44,13 +56,7 @@ export function AppUiProvider({ children }: { children: React.ReactNode }) {
 
   // ✅ suggestions state (po kategoriji)
   const [suggestionsByCategory, setSuggestionsByCategory] =
-    useState<SuggestionsByCategory>({
-      pages: [],
-      events: [],
-      special_offers: [],
-      poi: [],
-      news: [],
-    });
+    useState<SuggestionsByCategory>(createEmptySuggestions());
 
   const toggleCategory = (id: CategoryId) => {
     setActiveCategoryIds((prev) =>
@@ -64,6 +70,8 @@ export function AppUiProvider({ children }: { children: React.ReactNode }) {
     () => ({
       hasUserStarted,
       setHasUserStarted,
+      isAssistantResponding,
+      setIsAssistantResponding,
       dateRange,
       setDateRange,
       activeCategoryIds,
@@ -72,7 +80,13 @@ export function AppUiProvider({ children }: { children: React.ReactNode }) {
       suggestionsByCategory,
       setSuggestionsByCategory,
     }),
-    [hasUserStarted, dateRange, activeCategoryIds, suggestionsByCategory]
+    [
+      hasUserStarted,
+      isAssistantResponding,
+      dateRange,
+      activeCategoryIds,
+      suggestionsByCategory,
+    ]
   );
 
   return <AppUiContext.Provider value={value}>{children}</AppUiContext.Provider>;

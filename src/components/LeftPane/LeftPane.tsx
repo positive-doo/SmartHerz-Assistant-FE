@@ -7,7 +7,11 @@ import type { Dayjs } from "dayjs";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import styles from "./LeftPane.module.css";
 import { useTranslation } from "../i18n/useTranslation";
-import { useAppUi, type SuggestionsByCategory } from "@/state/AppUiContext";
+import { buildDemoSuggestionsFromAssistantText } from "@/data/demoSuggestions";
+import {
+  createEmptySuggestions,
+  useAppUi,
+} from "@/state/AppUiContext";
 
 const CHAT_API_BASE_URL = "http://localhost:8000";
 
@@ -37,14 +41,6 @@ type ChatMessage = {
   text: string;
   isFinal: boolean;
 };
-
-const createEmptySuggestions = (): SuggestionsByCategory => ({
-  pages: [],
-  events: [],
-  special_offers: [],
-  poi: [],
-  news: [],
-});
 
 const extractStreamContent = (eventBlock: string): string | null => {
   const dataLines = eventBlock
@@ -308,6 +304,8 @@ export default function LeftPane() {
     hasUserStarted,
     dateRange,
     setHasUserStarted,
+    setIsAssistantResponding,
+    clearCategories,
     setSuggestionsByCategory,
   } = useAppUi();
 
@@ -420,6 +418,9 @@ export default function LeftPane() {
 
           latestContent = content;
           updateMessage(assistantMessageId, content, false);
+          setSuggestionsByCategory(
+            buildDemoSuggestionsFromAssistantText(content)
+          );
         }
       }
 
@@ -432,11 +433,13 @@ export default function LeftPane() {
         }
       }
 
-      updateMessage(
-        assistantMessageId,
-        finalizeAssistantText(latestContent),
-        true
+      const finalText = finalizeAssistantText(latestContent);
+
+      updateMessage(assistantMessageId, finalText, true);
+      setSuggestionsByCategory(
+        buildDemoSuggestionsFromAssistantText(finalText)
       );
+      return finalText;
     } finally {
       reader.releaseLock();
 
@@ -469,6 +472,7 @@ export default function LeftPane() {
       },
     ]);
     setMessage("");
+    clearCategories();
     setSuggestionsByCategory(createEmptySuggestions());
 
     if (!hasUserStarted) {
@@ -476,6 +480,7 @@ export default function LeftPane() {
     }
 
     setIsSending(true);
+    setIsAssistantResponding(true);
 
     try {
       const response = await fetch(`${CHAT_API_BASE_URL}/chat`, {
@@ -499,7 +504,14 @@ export default function LeftPane() {
         throw new Error(`Chat request failed with status ${response.status}`);
       }
 
-      await streamAssistantResponse(activeSessionId, assistantMessageId);
+      const assistantText = await streamAssistantResponse(
+        activeSessionId,
+        assistantMessageId
+      );
+
+      setSuggestionsByCategory(
+        buildDemoSuggestionsFromAssistantText(assistantText)
+      );
     } catch (error) {
       if (error instanceof Error && error.name === "AbortError") {
         return;
@@ -509,6 +521,7 @@ export default function LeftPane() {
       updateMessage(assistantMessageId, CHAT_ERROR_MESSAGE, true);
     } finally {
       setIsSending(false);
+      setIsAssistantResponding(false);
     }
   };
 
