@@ -6,9 +6,15 @@ import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import styles from "./RightPane.module.css";
-import { useLang } from "@/components/i18n/LanguageProvider";
+import { useLang, type Lang } from "@/components/i18n/LanguageProvider";
 import { useTranslation } from "@/components/i18n/useTranslation";
 import { categories } from "@/data/categories";
+import {
+  experienceFilterColumns,
+  getExperienceFilterLabel,
+  type ExperienceFilterId,
+  type ExperienceFilterNode,
+} from "@/data/experienceFilters";
 import type { Category } from "@/models/category";
 import type { CategoryId, Suggestion } from "@/state/AppUiContext";
 import { useAppUi } from "@/state/AppUiContext";
@@ -30,14 +36,21 @@ export default function RightPane({ title }: RightPaneProps) {
     activeCategoryIds,
     toggleCategory,
     clearCategories,
+    activeExperienceIds,
+    setActiveExperienceIds,
+    clearExperienceFilters,
     suggestionsByCategory,
   } = useAppUi();
 
   const hasDateFilter = Boolean(dateRange[0] || dateRange[1]);
-  const hasAnyTopFilter = hasDateFilter;
+  const hasExperienceFilter = activeExperienceIds.length > 0;
+  const hasAnyTopFilter = hasDateFilter || hasExperienceFilter;
   const [showFilterPills, setShowFilterPills] = useState(true);
   const [showCategoryPills, setShowCategoryPills] = useState(true);
-  const filterLabels = [t("destination"), t("date"), t("interest")];
+  const [isExperienceFilterOpen, setIsExperienceFilterOpen] = useState(false);
+  const [draftExperienceIds, setDraftExperienceIds] = useState<
+    ExperienceFilterId[]
+  >([]);
 
   const sortedCategories = useMemo(
     () => categories.slice().sort((a, b) => a.order - b.order),
@@ -70,6 +83,26 @@ export default function RightPane({ title }: RightPaneProps) {
 
   const getCategoryLabel = (category: Category) =>
     category.label[lang] ?? category.label.bh ?? category.id;
+
+  const openExperienceFilter = () => {
+    setDraftExperienceIds(activeExperienceIds);
+    setIsExperienceFilterOpen(true);
+  };
+
+  const closeExperienceFilter = () => {
+    setActiveExperienceIds(draftExperienceIds);
+    setIsExperienceFilterOpen(false);
+  };
+
+  const toggleDraftExperience = (id: ExperienceFilterId) => {
+    setDraftExperienceIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const removeExperienceFilter = (id: ExperienceFilterId) => {
+    setActiveExperienceIds(activeExperienceIds.filter((item) => item !== id));
+  };
 
   return (
     <div className={styles.root}>
@@ -118,33 +151,56 @@ export default function RightPane({ title }: RightPaneProps) {
       </div>
 
       {showFilterPills && (
-        <div className={styles.filters}>
-          {filterLabels.map((label) =>
-            label === t("date") ? (
-              <DateFilterPill
-                key={label}
-                label={label}
-                value={dateRange}
-                onChange={setDateRange}
-              />
-            ) : (
-              <FilterPill key={label} label={label} />
-            )
-          )}
+        <>
+          <div className={styles.filters}>
+            <FilterPill label={t("destination")} />
 
-          {hasAnyTopFilter && (
-            <button
-              type="button"
-              className={`${styles.pill} ${styles.clearTopChip}`}
-              onClick={() => {
-                setDateRange([null, null]);
-              }}
-            >
-              <span className={styles.clearChipX}>&times;</span>
-              {t("clearFilters")}
-            </button>
+            <DateFilterPill
+              label={t("date")}
+              value={dateRange}
+              onChange={setDateRange}
+            />
+
+            <FilterPill
+              label={t("interest")}
+              activeCount={activeExperienceIds.length}
+              onClick={openExperienceFilter}
+            />
+
+            {hasAnyTopFilter && (
+              <button
+                type="button"
+                className={`${styles.pill} ${styles.clearTopChip}`}
+                onClick={() => {
+                  setDateRange([null, null]);
+                  clearExperienceFilters();
+                }}
+              >
+                <span className={styles.clearChipX}>&times;</span>
+                {t("clearFilters")}
+              </button>
+            )}
+          </div>
+
+          {hasExperienceFilter && (
+            <div className={styles.appliedFilters} aria-label={t("selectedInterests")}>
+              {activeExperienceIds.map((id) => (
+                <button
+                  key={id}
+                  type="button"
+                  className={styles.appliedFilterChip}
+                  onClick={() => removeExperienceFilter(id)}
+                  aria-label={`${t("removeFilter")} ${getExperienceFilterLabel(id, lang)}`}
+                >
+                  <span>{getExperienceFilterLabel(id, lang)}</span>
+                  <span className={styles.clearChipX} aria-hidden="true">
+                    &times;
+                  </span>
+                </button>
+              ))}
+            </div>
           )}
-        </div>
+        </>
       )}
 
       {hasUserStarted && (
@@ -291,15 +347,144 @@ export default function RightPane({ title }: RightPaneProps) {
           })}
         </div>
       )}
+
+      {isExperienceFilterOpen && (
+        <ExperienceFilterOverlay
+          draftIds={draftExperienceIds}
+          onToggle={toggleDraftExperience}
+          onClose={closeExperienceFilter}
+        />
+      )}
     </div>
   );
 }
 
-function FilterPill({ label }: { label: string }) {
+function FilterPill({
+  label,
+  activeCount,
+  onClick,
+}: {
+  label: string;
+  activeCount?: number;
+  onClick?: () => void;
+}) {
   return (
-    <button className={styles.pill} type="button">
+    <button className={styles.pill} type="button" onClick={onClick}>
       <AddIcon className={styles.pillIcon} />
       <span>{label}</span>
+      {Boolean(activeCount) && (
+        <span className={styles.pillBadge}>{activeCount}</span>
+      )}
     </button>
+  );
+}
+
+function ExperienceFilterOverlay({
+  draftIds,
+  onToggle,
+  onClose,
+}: {
+  draftIds: ExperienceFilterId[];
+  onToggle: (id: ExperienceFilterId) => void;
+  onClose: () => void;
+}) {
+  const { lang } = useLang();
+  const { t } = useTranslation();
+
+  return (
+    <div
+      className={styles.experienceOverlay}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="experience-filter-title"
+    >
+      <div className={styles.experiencePanel}>
+        <header className={styles.experienceHeader}>
+          <h2 id="experience-filter-title" className={styles.experienceTitle}>
+            {t("experiencesTitle")}
+          </h2>
+        </header>
+
+        <div className={styles.experienceGrid}>
+          {experienceFilterColumns.map((column, index) => (
+            <div className={styles.experienceColumn} key={`column-${index}`}>
+              {column.map((item) => (
+                <ExperienceCheckboxGroup
+                  key={item.id}
+                  item={item}
+                  lang={lang}
+                  selectedIds={draftIds}
+                  onToggle={onToggle}
+                />
+              ))}
+            </div>
+          ))}
+        </div>
+
+        <div className={styles.experienceFooter}>
+          <button
+            type="button"
+            className={styles.closeFilterButton}
+            onClick={onClose}
+          >
+            {t("closeFilter")}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ExperienceCheckboxGroup({
+  item,
+  lang,
+  selectedIds,
+  onToggle,
+  nested = false,
+}: {
+  item: ExperienceFilterNode;
+  lang: Lang;
+  selectedIds: ExperienceFilterId[];
+  onToggle: (id: ExperienceFilterId) => void;
+  nested?: boolean;
+}) {
+  const label = item.label[lang] ?? item.label.bh ?? item.id;
+  const isSelected = selectedIds.includes(item.id);
+
+  return (
+    <div
+      className={`${styles.experienceGroup} ${
+        nested ? styles.experienceGroupNested : ""
+      }`}
+    >
+      <label
+        className={`${styles.experienceOption} ${
+          nested ? styles.experienceOptionNested : styles.experienceOptionRoot
+        }`}
+      >
+        <input
+          className={styles.experienceCheckbox}
+          type="checkbox"
+          checked={isSelected}
+          onChange={() => onToggle(item.id)}
+        />
+        <span>{label}</span>
+      </label>
+
+      {item.children && (
+        <div className={styles.experienceChildren}>
+          {item.children.map((child) => (
+            <ExperienceCheckboxGroup
+              key={child.id}
+              item={child}
+              lang={lang}
+              selectedIds={selectedIds}
+              onToggle={onToggle}
+              nested
+            />
+          ))}
+        </div>
+      )}
+    </div>
   );
 }

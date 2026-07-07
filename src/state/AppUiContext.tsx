@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useMemo, useState } from "react";
 import type { Dayjs } from "dayjs";
+import type { ExperienceFilterId } from "@/data/experienceFilters";
 import type { LocalizedString } from "@/models/category";
 
 export type CategoryId = "pages" | "events" | "special_offers" | "poi" | "news";
@@ -37,6 +38,10 @@ type AppUiState = {
   toggleCategory: (id: CategoryId) => void;
   clearCategories: () => void;
 
+  activeExperienceIds: ExperienceFilterId[];
+  setActiveExperienceIds: (ids: ExperienceFilterId[]) => void;
+  clearExperienceFilters: () => void;
+
   suggestionsByCategory: SuggestionsByCategory;
   setSuggestionsByCategory: (data: SuggestionsByCategory) => void;
 };
@@ -53,6 +58,9 @@ export function AppUiProvider({ children }: { children: React.ReactNode }) {
 
   // ✅ multi-select state
   const [activeCategoryIds, setActiveCategoryIds] = useState<CategoryId[]>([]);
+  const [activeExperienceIds, setActiveExperienceIds] = useState<
+    ExperienceFilterId[]
+  >([]);
 
   // ✅ suggestions state (po kategoriji)
   const [suggestionsByCategory, setSuggestionsByCategory] =
@@ -65,6 +73,7 @@ export function AppUiProvider({ children }: { children: React.ReactNode }) {
   };
 
   const clearCategories = () => setActiveCategoryIds([]);
+  const clearExperienceFilters = () => setActiveExperienceIds([]);
 
   const value = useMemo(
     () => ({
@@ -77,6 +86,9 @@ export function AppUiProvider({ children }: { children: React.ReactNode }) {
       activeCategoryIds,
       toggleCategory,
       clearCategories,
+      activeExperienceIds,
+      setActiveExperienceIds,
+      clearExperienceFilters,
       suggestionsByCategory,
       setSuggestionsByCategory,
     }),
@@ -85,6 +97,7 @@ export function AppUiProvider({ children }: { children: React.ReactNode }) {
       isAssistantResponding,
       dateRange,
       activeCategoryIds,
+      activeExperienceIds,
       suggestionsByCategory,
     ]
   );

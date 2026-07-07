@@ -1,13 +1,21 @@
 "use client";
 
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import { type ChangeEvent, type ReactNode, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { v4 as uuidv4 } from "uuid";
 import type { Dayjs } from "dayjs";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import styles from "./LeftPane.module.css";
 import { useTranslation } from "../i18n/useTranslation";
+import {
+  AssistantFeedback,
+  type FeedbackStatus,
+} from "../AssistantFeedback/AssistantFeedback";
 import { buildDemoSuggestionsFromAssistantText } from "@/data/demoSuggestions";
+import {
+  getExperienceFilterLabel,
+  type ExperienceFilterId,
+} from "@/data/experienceFilters";
 import {
   createEmptySuggestions,
   useAppUi,
@@ -34,6 +42,8 @@ const SEND_ICON =
   "https://cybercompany.ai/wp-content/uploads/2026/05/ArrowRightSquareFill.svg";
 
 const CHAT_ERROR_MESSAGE = "Doslo je do greske pri komunikaciji sa serverom.";
+const PLAN_DOWNLOAD_SUBTITLE =
+  "Preuzmite plan i koristite ga kada odete ili kada nemate internet";
 
 type ChatMessage = {
   id: string;
@@ -69,28 +79,250 @@ const extractStreamContent = (eventBlock: string): string | null => {
 
 const finalizeAssistantText = (text: string) => text.replace(/\u258C$/, "");
 
+const normalizePlanText = (text: string) =>
+  text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+
+const getTravelPlanDayCount = (text: string) => {
+  const uniqueDays = new Set<number>();
+
+  for (const match of normalizePlanText(text).matchAll(/\bdan\s*(\d{1,2})\b/g)) {
+    uniqueDays.add(Number(match[1]));
+  }
+
+  return uniqueDays.size;
+};
+
+const looksLikeCompleteTravelPlan = (text: string) => {
+  const normalizedText = normalizePlanText(text);
+
+  if (
+    !normalizedText.trim() ||
+    normalizedText.includes(normalizePlanText(CHAT_ERROR_MESSAGE))
+  ) {
+    return false;
+  }
+
+  const dayCount = getTravelPlanDayCount(text);
+  const hasPlanSignal =
+    /\b(plan|itinerar|program)\b/.test(normalizedText) &&
+    /\b(putovanja|puta|izleta|boravka|dan|dana)\b/.test(normalizedText);
+  const hasTravelStructure =
+    /\b(lokacija|vrijeme|vreme|smjestaj|smestaj|povratak|rucak|vecera|pre podne|popodne|jutro)\b/.test(
+      normalizedText
+    );
+
+  return (
+    dayCount >= 3 ||
+    (dayCount >= 2 && (hasPlanSignal || hasTravelStructure)) ||
+    (dayCount >= 1 && hasPlanSignal && hasTravelStructure)
+  );
+};
+
+const stripPlanMarkdown = (text: string) =>
+  text
+    .replace(/\[(.*?)\]\((.*?)\)/g, "$1 - $2")
+    .replace(/\*\*(.*?)\*\*/g, "$1")
+    .replace(/^#{1,6}\s*/gm, "")
+    .trim();
+
+const cleanPlanLine = (line: string) =>
+  removePdfIcons(stripPlanMarkdown(line))
+    .replace(/^\s*[-*]\s*/, "")
+    .trim();
+
+const removePdfIcons = (text: string) =>
+  text
+    .replace(/[\u{1F1E6}-\u{1F1FF}]{2}/gu, "")
+    .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]\uFE0F?/gu, "")
+    .replace(/\uFE0F/g, "")
+    .replace(/[ \t]{2,}/g, " ")
+    .replace(/^[ \t]+/gm, "")
+    .replace(/[ \t]+$/gm, "")
+    .trim();
+
+const isFirstDayHeading = (line: string) => {
+  const normalizedLine = normalizePlanText(cleanPlanLine(line));
+
+  return /^(dan\s*1|prvi\s+dan)\b/.test(normalizedLine);
+};
+
+const isGuideTipsHeading = (line: string) => {
+  const normalizedLine = normalizePlanText(cleanPlanLine(line));
+
+  return (
+    /male\s+cake/.test(normalizedLine) &&
+    /(vodica|lokalnog\s+vodica)/.test(normalizedLine)
+  );
+};
+
+const isTrailingPlanSuggestion = (line: string) => {
+  const normalizedLine = normalizePlanText(cleanPlanLine(line));
+
+  return /^(ako\s+(zelis|zelite)|zelis\s+li|zelite\s+li|mogu\s+|ukoliko\s+(zelis|zelite))\b/.test(
+    normalizedLine
+  );
+};
+
+const buildPlanPdfMarkdown = (text: string) => {
+  const lines = text.trim().split(/\r?\n/);
+  const firstDayIndex = lines.findIndex(isFirstDayHeading);
+
+  if (firstDayIndex === -1) {
+    return removePdfIcons(text);
+  }
+
+  const guideTipsIndex = lines.findIndex(
+    (line, index) => index >= firstDayIndex && isGuideTipsHeading(line)
+  );
+
+  if (guideTipsIndex === -1) {
+    return removePdfIcons(lines.slice(firstDayIndex).join("\n"));
+  }
+
+  let endIndex = lines.length;
+  let hasGuideTipListStarted = false;
+
+  for (let index = guideTipsIndex + 1; index < lines.length; index += 1) {
+    const line = lines[index];
+    const trimmedLine = line.trim();
+
+    if (!trimmedLine) {
+      continue;
+    }
+
+    if (/^([-*]|\d+\.)\s+/.test(trimmedLine)) {
+      hasGuideTipListStarted = true;
+      continue;
+    }
+
+    if (hasGuideTipListStarted || isTrailingPlanSuggestion(line)) {
+      endIndex = index;
+      break;
+    }
+  }
+
+  return removePdfIcons(lines.slice(firstDayIndex, endIndex).join("\n"));
+};
+
+const getPlanHeading = (text: string) => {
+  const heading = text
+    .split(/\r?\n/)
+    .map((line) =>
+      stripPlanMarkdown(line)
+        .replace(/^\s*[-*]\s*/, "")
+        .trim()
+    )
+    .find((line) => {
+      const normalizedLine = normalizePlanText(line);
+
+      return (
+        /^(plan|itinerar|program)\b/.test(normalizedLine) &&
+        /\b(putovanja|puta|izleta|boravka|dan|dana)\b/.test(normalizedLine)
+      );
+    });
+
+  if (!heading || heading.length > 90) {
+    return "";
+  }
+
+  const cleanedHeading = heading
+    .replace(/^(plan|itinerar|program)(\s+putovanja)?\s*(za)?\s*[:\-–—]?\s*/i, "")
+    .replace(/^za\s+/i, "")
+    .trim();
+
+  return cleanedHeading && normalizePlanText(cleanedHeading) !== "putovanja"
+    ? cleanedHeading
+    : "";
+};
+
+const buildPlanDownloadTitle = (text: string) => {
+  const heading = getPlanHeading(text);
+
+  if (heading) {
+    return `Plan putovanja — ${heading}`;
+  }
+
+  const dayCount = getTravelPlanDayCount(text);
+
+  if (dayCount > 0) {
+    return `Plan putovanja — ${dayCount} ${dayCount === 1 ? "dan" : "dana"}`;
+  }
+
+  return "Plan putovanja";
+};
+
+const sanitizeDownloadFilename = (filename: string) => {
+  const cleanedFilename = filename
+    .replace(/[\\/:*?"<>|]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  return cleanedFilename || "Plan putovanja";
+};
+
+const buildPdfFilename = (title: string) =>
+  `${sanitizeDownloadFilename(title).replace(/\.pdf$/i, "")}.pdf`;
+
+const getPdfFilenameFromContentDisposition = (
+  contentDisposition: string | null,
+  fallbackFilename: string
+) => {
+  if (!contentDisposition) {
+    return fallbackFilename;
+  }
+
+  const encodedFilenameMatch = /filename\*=UTF-8''([^;]+)/i.exec(
+    contentDisposition
+  );
+
+  if (encodedFilenameMatch?.[1]) {
+    try {
+      return decodeURIComponent(encodedFilenameMatch[1]);
+    } catch {
+      return fallbackFilename;
+    }
+  }
+
+  const filenameMatch = /filename="?([^";]+)"?/i.exec(contentDisposition);
+
+  return filenameMatch?.[1] ?? fallbackFilename;
+};
+
 const buildMessageContent = (
   text: string,
-  dateRange: [Dayjs | null, Dayjs | null]
+  dateRange: [Dayjs | null, Dayjs | null],
+  activeExperienceIds: ExperienceFilterId[]
 ) => {
   const [startDate, endDate] = dateRange;
+  const messageParts = [text];
 
-  if (!startDate && !endDate) {
-    return text;
+  if (startDate || endDate) {
+    const formattedStartDate = startDate?.format("DD.MM.YYYY");
+    const formattedEndDate = endDate?.format("DD.MM.YYYY");
+
+    if (formattedStartDate && formattedEndDate) {
+      messageParts.push(
+        `Datum putovanja: od ${formattedStartDate} do ${formattedEndDate}.`
+      );
+    } else if (formattedStartDate) {
+      messageParts.push(`Datum putovanja: od ${formattedStartDate}.`);
+    } else {
+      messageParts.push(`Datum putovanja: do ${formattedEndDate}.`);
+    }
   }
 
-  const formattedStartDate = startDate?.format("DD.MM.YYYY");
-  const formattedEndDate = endDate?.format("DD.MM.YYYY");
-
-  if (formattedStartDate && formattedEndDate) {
-    return `${text}\n\nDatum putovanja: od ${formattedStartDate} do ${formattedEndDate}.`;
+  if (activeExperienceIds.length > 0) {
+    messageParts.push(
+      `Interesovanja: ${activeExperienceIds
+        .map((id) => getExperienceFilterLabel(id, "bh"))
+        .join(", ")}.`
+    );
   }
 
-  if (formattedStartDate) {
-    return `${text}\n\nDatum putovanja: od ${formattedStartDate}.`;
-  }
-
-  return `${text}\n\nDatum putovanja: do ${formattedEndDate}.`;
+  return messageParts.join("\n\n");
 };
 
 const getNextUrlStart = (text: string, cursor: number) => {
@@ -296,6 +528,13 @@ export default function LeftPane() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [sessionId, setSessionId] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [likeStatus, setLikeStatus] = useState<FeedbackStatus>(null);
+  const [feedbackVisible, setFeedbackVisible] = useState(false);
+  const [isFeedbackSubmitting, setIsFeedbackSubmitting] = useState(false);
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+  const [feedback, setFeedback] = useState("");
+  const [feedbackEmail, setFeedbackEmail] = useState("");
+  const [isPlanDownloading, setIsPlanDownloading] = useState(false);
   const messagesRef = useRef<HTMLDivElement | null>(null);
   const streamAbortRef = useRef<AbortController | null>(null);
   const { t } = useTranslation();
@@ -307,6 +546,7 @@ export default function LeftPane() {
     setIsAssistantResponding,
     clearCategories,
     setSuggestionsByCategory,
+    activeExperienceIds,
   } = useAppUi();
 
   useEffect(() => {
@@ -338,6 +578,10 @@ export default function LeftPane() {
   }, [messages]);
 
   const sendButtonTooltip = hasText ? t("sendButton") : t("recordButton");
+
+  const lastAssistantMessageId =
+    [...messages].reverse().find((item) => item.role === "assistant" && item.isFinal)
+      ?.id ?? null;
 
   const ensureSessionId = () => {
     if (sessionId) {
@@ -449,6 +693,173 @@ export default function LeftPane() {
     }
   };
 
+  const getLastFeedbackContext = () => {
+    let lastAssistantIndex = -1;
+
+    for (let index = messages.length - 1; index >= 0; index -= 1) {
+      if (messages[index].role === "assistant" && messages[index].isFinal) {
+        lastAssistantIndex = index;
+        break;
+      }
+    }
+
+    if (lastAssistantIndex === -1) {
+      return { lastQuestion: "", lastAnswer: "" };
+    }
+
+    const lastQuestion =
+      [...messages.slice(0, lastAssistantIndex)]
+        .reverse()
+        .find((item) => item.role === "user")?.text ?? "";
+
+    const lastAnswer = messages[lastAssistantIndex].text;
+
+    return { lastQuestion, lastAnswer };
+  };
+
+  const submitFeedback = async (
+    status: Exclude<FeedbackStatus, null>,
+    feedbackText: string,
+    email: string
+  ) => {
+    const { lastQuestion, lastAnswer } = getLastFeedbackContext();
+
+    if (!lastAnswer.trim()) {
+      return;
+    }
+
+    const activeSessionId = ensureSessionId();
+
+    const response = await fetch(`${CHAT_API_BASE_URL}/feedback`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Session-ID": activeSessionId,
+      },
+      credentials: "include",
+      body: JSON.stringify({
+        sessionId: activeSessionId,
+        status,
+        feedback: feedbackText.trim() || "Nije ostavljen komentar",
+        feedbackEmail: email.trim(),
+        lastQuestion,
+        lastAnswer,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Feedback request failed with status ${response.status}`);
+    }
+  };
+
+  const handleLikeClick = () => {
+    if (isFeedbackSubmitting) {
+      return;
+    }
+
+    setLikeStatus("Good");
+    setFeedbackVisible(true);
+    setFeedbackSubmitted(false);
+  };
+
+  const handleDislikeClick = () => {
+    setLikeStatus("Bad");
+    setFeedbackVisible(true);
+    setFeedbackSubmitted(false);
+  };
+
+  const handleFeedbackChange = (
+    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    setFeedback(event.target.value);
+  };
+
+  const handleFeedbackEmailChange = (
+    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    setFeedbackEmail(event.target.value);
+  };
+
+  const handleCancelFeedback = () => {
+    setFeedback("");
+    setFeedbackEmail("");
+    setLikeStatus(null);
+    setFeedbackVisible(false);
+    setFeedbackSubmitted(false);
+  };
+
+  const handleFeedbackSubmit = async () => {
+    if (!likeStatus || (likeStatus === "Bad" && !feedback.trim())) {
+      return;
+    }
+
+    try {
+      setIsFeedbackSubmitting(true);
+      await submitFeedback(likeStatus, feedback, feedbackEmail);
+      setFeedbackVisible(false);
+      setFeedback("");
+      setFeedbackEmail("");
+      setFeedbackSubmitted(true);
+    } catch (error) {
+      console.error("Failed to send feedback:", error);
+    } finally {
+      setIsFeedbackSubmitting(false);
+    }
+  };
+
+  const handleDownloadPlan = async (planText: string) => {
+    if (isPlanDownloading) {
+      return;
+    }
+
+    const title = buildPlanDownloadTitle(planText);
+    const fallbackFilename = buildPdfFilename(title);
+    const pdfMarkdown = buildPlanPdfMarkdown(planText);
+    const formData = new FormData();
+
+    formData.append("markdownText", pdfMarkdown);
+    formData.append("original_filename", fallbackFilename);
+
+    try {
+      setIsPlanDownloading(true);
+
+      const response = await fetch(`${CHAT_API_BASE_URL}/save_pdf`, {
+        method: "POST",
+        headers: {
+          "Session-ID": ensureSessionId(),
+        },
+        credentials: "include",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`PDF download failed with status ${response.status}`);
+      }
+
+      const pdfBlob = await response.blob();
+      const downloadUrl = URL.createObjectURL(pdfBlob);
+      const link = document.createElement("a");
+      const contentDisposition = response.headers.get("Content-Disposition");
+
+      link.href = downloadUrl;
+      link.download = getPdfFilenameFromContentDisposition(
+        contentDisposition,
+        fallbackFilename
+      );
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      window.setTimeout(() => {
+        URL.revokeObjectURL(downloadUrl);
+      }, 1000);
+    } catch (error) {
+      console.error("Failed to download plan PDF:", error);
+    } finally {
+      setIsPlanDownloading(false);
+    }
+  };
+
   const handleSend = async () => {
     const text = message.trim();
 
@@ -459,7 +870,11 @@ export default function LeftPane() {
     const activeSessionId = ensureSessionId();
     const userMessageId = uuidv4();
     const assistantMessageId = uuidv4();
-    const messageContent = buildMessageContent(text, dateRange);
+    const messageContent = buildMessageContent(
+      text,
+      dateRange,
+      activeExperienceIds
+    );
 
     setMessages((prevMessages) => [
       ...prevMessages,
@@ -472,6 +887,11 @@ export default function LeftPane() {
       },
     ]);
     setMessage("");
+    setLikeStatus(null);
+    setFeedbackVisible(false);
+    setFeedbackSubmitted(false);
+    setFeedback("");
+    setFeedbackEmail("");
     clearCategories();
     setSuggestionsByCategory(createEmptySuggestions());
 
@@ -572,24 +992,36 @@ export default function LeftPane() {
                 const isTypingOnly =
                   !chatMessage.isFinal && chatMessage.text.trim().length === 0;
 
+                const isLastAssistantMessage = chatMessage.id === lastAssistantMessageId;
+                const planDownload =
+                  isLastAssistantMessage &&
+                  chatMessage.isFinal &&
+                  looksLikeCompleteTravelPlan(chatMessage.text)
+                    ? {
+                      title: buildPlanDownloadTitle(chatMessage.text),
+                      subtitle: PLAN_DOWNLOAD_SUBTITLE,
+                      isDownloading: isPlanDownloading,
+                      onDownload: () => handleDownloadPlan(chatMessage.text),
+                    }
+                    : null;
+
                 return (
                   <div
                     key={chatMessage.id}
                     className={styles.assistantBubbleWrap}
                   >
                     <div
-                      className={`${styles.assistantBubble} ${
-                        !chatMessage.isFinal ? styles.assistantBubbleStreaming : ""
-                      } ${
-                        isTypingOnly ? styles.assistantBubbleTypingOnly : ""
-                      }`}
+                      className={`${styles.assistantBubble} ${!chatMessage.isFinal ? styles.assistantBubbleStreaming : ""
+                        } ${isTypingOnly ? styles.assistantBubbleTypingOnly : ""
+                        }`}
                     >
                       <div className={styles.bubbleText}>
                         {chatMessage.text
                           ? renderFormattedText(chatMessage.text, {
-                              isStreaming: !chatMessage.isFinal,
-                            })
+                            isStreaming: !chatMessage.isFinal,
+                          })
                           : null}
+
                         {isTypingOnly && (
                           <span className={styles.typingIndicator} aria-hidden="true">
                             <span className={styles.typingDot} />
@@ -597,6 +1029,26 @@ export default function LeftPane() {
                             <span className={styles.typingDot} />
                           </span>
                         )}
+
+                        {isLastAssistantMessage &&
+                          chatMessage.isFinal &&
+                          chatMessage.text.trim().length > 0 && (
+                            <AssistantFeedback
+                              planDownload={planDownload}
+                              likeStatus={likeStatus}
+                              feedbackVisible={feedbackVisible}
+                              isSubmitting={isFeedbackSubmitting}
+                              feedbackSubmitted={feedbackSubmitted}
+                              feedback={feedback}
+                              feedbackEmail={feedbackEmail}
+                              onLikeClick={handleLikeClick}
+                              onDislikeClick={handleDislikeClick}
+                              onFeedbackChange={handleFeedbackChange}
+                              onFeedbackEmailChange={handleFeedbackEmailChange}
+                              onCancel={handleCancelFeedback}
+                              onFeedbackSubmit={handleFeedbackSubmit}
+                            />
+                          )}
                       </div>
                     </div>
 
@@ -646,9 +1098,8 @@ export default function LeftPane() {
                 }}
               />
               <button
-                className={`${styles.sendButton} ${
-                  hasText ? styles.sendButtonSend : styles.sendButtonMic
-                }`}
+                className={`${styles.sendButton} ${hasText ? styles.sendButtonSend : styles.sendButtonMic
+                  }`}
                 aria-label={hasText ? "Send" : "Start recording"}
                 aria-disabled={isSending}
                 title={sendButtonTooltip}
