@@ -5,6 +5,7 @@ import Image from "next/image";
 import { v4 as uuidv4 } from "uuid";
 import type { Dayjs } from "dayjs";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
+import StopRoundedIcon from "@mui/icons-material/StopRounded";
 import styles from "./LeftPane.module.css";
 import { useTranslation } from "../i18n/useTranslation";
 import {
@@ -44,6 +45,12 @@ const SEND_ICON =
 const CHAT_ERROR_MESSAGE = "Doslo je do greske pri komunikaciji sa serverom.";
 const PLAN_DOWNLOAD_SUBTITLE =
   "Preuzmite plan i koristite ga kada odete ili kada nemate internet";
+const RECORDING_BAR_COUNT = 5;
+
+type WindowWithWebkitAudioContext = Window &
+  typeof globalThis & {
+    webkitAudioContext?: typeof AudioContext;
+  };
 
 type ChatMessage = {
   id: string;
@@ -325,6 +332,37 @@ const buildMessageContent = (
   return messageParts.join("\n\n");
 };
 
+const createDefaultRecordingLevels = () =>
+  Array.from({ length: RECORDING_BAR_COUNT }, () => 5);
+
+const getSupportedAudioMimeType = () => {
+  if (typeof MediaRecorder === "undefined") {
+    return "";
+  }
+
+  return (
+    [
+      "audio/webm;codecs=opus",
+      "audio/webm",
+      "audio/mp4",
+      "audio/ogg;codecs=opus",
+      "audio/ogg",
+    ].find((mimeType) => MediaRecorder.isTypeSupported(mimeType)) ?? ""
+  );
+};
+
+const getRecordingFilename = (mimeType: string) => {
+  if (mimeType.includes("mp4")) {
+    return "recording.mp4";
+  }
+
+  if (mimeType.includes("ogg")) {
+    return "recording.ogg";
+  }
+
+  return "recording.webm";
+};
+
 const getNextUrlStart = (text: string, cursor: number) => {
   const match = /https?:\/\/\S*/.exec(text.slice(cursor));
   return match ? cursor + match.index : -1;
@@ -535,8 +573,21 @@ export default function LeftPane() {
   const [feedback, setFeedback] = useState("");
   const [feedbackEmail, setFeedbackEmail] = useState("");
   const [isPlanDownloading, setIsPlanDownloading] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const [voiceError, setVoiceError] = useState("");
+  const [recordingLevels, setRecordingLevels] = useState<number[]>(
+    createDefaultRecordingLevels
+  );
   const messagesRef = useRef<HTMLDivElement | null>(null);
   const streamAbortRef = useRef<AbortController | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const recordingFrameRef = useRef<number | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordingChunksRef = useRef<Blob[]>([]);
+  const shouldUploadRecordingRef = useRef(false);
   const { t } = useTranslation();
   const hasText = message.trim().length > 0;
   const {
@@ -564,6 +615,21 @@ export default function LeftPane() {
   useEffect(() => {
     return () => {
       streamAbortRef.current?.abort();
+      shouldUploadRecordingRef.current = false;
+
+      if (recordingFrameRef.current !== null) {
+        cancelAnimationFrame(recordingFrameRef.current);
+        recordingFrameRef.current = null;
+      }
+
+      const mediaRecorder = mediaRecorderRef.current;
+      if (mediaRecorder && mediaRecorder.state !== "inactive") {
+        mediaRecorder.onstop = null;
+        mediaRecorder.stop();
+      }
+
+      mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
+      void audioContextRef.current?.close();
     };
   }, []);
 
@@ -577,7 +643,16 @@ export default function LeftPane() {
     container.scrollTop = container.scrollHeight;
   }, [messages]);
 
-  const sendButtonTooltip = hasText ? t("sendButton") : t("recordButton");
+  const isComposerButtonDisabled = hasText
+    ? isSending || isRecording || isTranscribing
+    : !isRecording && (isSending || isTranscribing);
+  const sendButtonTooltip = isRecording
+    ? t("stopRecordingButton")
+    : isTranscribing
+      ? t("transcribingAudio")
+      : hasText
+        ? t("sendButton")
+        : t("recordButton");
 
   const lastAssistantMessageId =
     [...messages].reverse().find((item) => item.role === "assistant" && item.isFinal)
@@ -860,8 +935,8 @@ export default function LeftPane() {
     }
   };
 
-  const handleSend = async () => {
-    const text = message.trim();
+  const sendMessageText = async (rawText: string) => {
+    const text = rawText.trim();
 
     if (!text || isSending) {
       return;
@@ -943,6 +1018,270 @@ export default function LeftPane() {
       setIsSending(false);
       setIsAssistantResponding(false);
     }
+  };
+
+  const handleSend = () => {
+    void sendMessageText(message);
+  };
+
+  const updateRecordingLevels = () => {
+    const analyser = analyserRef.current;
+
+    if (!analyser) {
+      return;
+    }
+
+    const data = new Uint8Array(analyser.frequencyBinCount);
+    analyser.getByteFrequencyData(data);
+
+    const bucketSize = Math.max(
+      1,
+      Math.floor(data.length / RECORDING_BAR_COUNT)
+    );
+    const levels = Array.from({ length: RECORDING_BAR_COUNT }, (_, index) => {
+      const start = index * bucketSize;
+      const end =
+        index === RECORDING_BAR_COUNT - 1
+          ? data.length
+          : Math.min(data.length, start + bucketSize);
+      let total = 0;
+
+      for (let i = start; i < end; i += 1) {
+        total += data[i];
+      }
+
+      const average = end > start ? total / (end - start) : 0;
+      return 5 + (average / 255) * 23;
+    });
+
+    setRecordingLevels(levels);
+    recordingFrameRef.current = requestAnimationFrame(updateRecordingLevels);
+  };
+
+  const stopRecordingVisuals = () => {
+    if (recordingFrameRef.current !== null) {
+      cancelAnimationFrame(recordingFrameRef.current);
+      recordingFrameRef.current = null;
+    }
+
+    analyserRef.current = null;
+
+    if (audioContextRef.current && audioContextRef.current.state !== "closed") {
+      void audioContextRef.current.close();
+    }
+
+    audioContextRef.current = null;
+    setRecordingLevels(createDefaultRecordingLevels());
+  };
+
+  const stopRecordingStream = () => {
+    mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
+    mediaStreamRef.current = null;
+  };
+
+  const initializeBackendSession = async (activeSessionId: string) => {
+    const response = await fetch(`${CHAT_API_BASE_URL}/initialize_session`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({
+        session_id: activeSessionId,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Session initialization failed with status ${response.status}`);
+    }
+  };
+
+  const uploadVoiceRecording = async (blob: Blob) => {
+    if (blob.size === 0) {
+      setVoiceError(t("emptyRecording"));
+      return;
+    }
+
+    const activeSessionId = ensureSessionId();
+    const mimeType = blob.type || getSupportedAudioMimeType() || "audio/webm";
+    const formData = new FormData();
+    formData.append("blob", blob, getRecordingFilename(mimeType));
+
+    try {
+      setIsTranscribing(true);
+      setVoiceError("");
+      await initializeBackendSession(activeSessionId);
+
+      const response = await fetch(`${CHAT_API_BASE_URL}/transcribe`, {
+        method: "POST",
+        headers: {
+          "Session-ID": activeSessionId,
+        },
+        credentials: "include",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as {
+          detail?: unknown;
+        } | null;
+        const detail =
+          typeof payload?.detail === "string" ? payload.detail : "";
+
+        throw new Error(detail || t("transcriptionError"));
+      }
+
+      const data = (await response.json()) as { transcript?: unknown };
+      const transcript =
+        typeof data.transcript === "string" ? data.transcript.trim() : "";
+
+      if (!transcript) {
+        setVoiceError(t("emptyTranscript"));
+        return;
+      }
+
+      setMessage(transcript);
+    } catch (error) {
+      console.error("Voice transcription failed:", error);
+      setVoiceError(
+        error instanceof Error ? error.message : t("transcriptionError")
+      );
+    } finally {
+      setIsTranscribing(false);
+    }
+  };
+
+  const startVoiceRecording = async () => {
+    if (isSending || isTranscribing || isRecording) {
+      return;
+    }
+
+    if (
+      typeof navigator === "undefined" ||
+      !navigator.mediaDevices?.getUserMedia ||
+      typeof MediaRecorder === "undefined"
+    ) {
+      setVoiceError(t("microphoneUnavailable"));
+      return;
+    }
+
+    try {
+      setMessage("");
+      setVoiceError("");
+
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaStreamRef.current = stream;
+
+      const AudioContextConstructor =
+        window.AudioContext ||
+        (window as WindowWithWebkitAudioContext).webkitAudioContext;
+
+      if (AudioContextConstructor) {
+        const audioContext = new AudioContextConstructor();
+        const source = audioContext.createMediaStreamSource(stream);
+        const analyser = audioContext.createAnalyser();
+
+        analyser.fftSize = 64;
+        analyser.smoothingTimeConstant = 0.6;
+        source.connect(analyser);
+
+        audioContextRef.current = audioContext;
+        analyserRef.current = analyser;
+      }
+
+      const mimeType = getSupportedAudioMimeType();
+      const recorderOptions = mimeType ? { mimeType } : undefined;
+      const mediaRecorder = new MediaRecorder(stream, recorderOptions);
+
+      recordingChunksRef.current = [];
+      shouldUploadRecordingRef.current = true;
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          recordingChunksRef.current.push(event.data);
+        }
+      };
+      mediaRecorder.onstop = () => {
+        const recordingMimeType =
+          mediaRecorder.mimeType || mimeType || "audio/webm";
+        const recordingBlob = new Blob(recordingChunksRef.current, {
+          type: recordingMimeType,
+        });
+        const shouldUpload = shouldUploadRecordingRef.current;
+
+        recordingChunksRef.current = [];
+        shouldUploadRecordingRef.current = false;
+        mediaRecorderRef.current = null;
+
+        if (shouldUpload) {
+          void uploadVoiceRecording(recordingBlob);
+        }
+      };
+      mediaRecorder.onerror = () => {
+        shouldUploadRecordingRef.current = false;
+        setIsRecording(false);
+        stopRecordingVisuals();
+        stopRecordingStream();
+        setVoiceError(t("recordingError"));
+
+        if (mediaRecorder.state !== "inactive") {
+          mediaRecorder.stop();
+        }
+      };
+
+      mediaRecorderRef.current = mediaRecorder;
+      mediaRecorder.start();
+      setIsRecording(true);
+
+      if (analyserRef.current) {
+        recordingFrameRef.current = requestAnimationFrame(updateRecordingLevels);
+      }
+    } catch (error) {
+      console.error("Unable to start voice recording:", error);
+      shouldUploadRecordingRef.current = false;
+      setIsRecording(false);
+      stopRecordingVisuals();
+      stopRecordingStream();
+      setVoiceError(
+        error instanceof DOMException && error.name === "NotAllowedError"
+          ? t("microphoneDenied")
+          : t("microphoneUnavailable")
+      );
+    }
+  };
+
+  const stopVoiceRecording = () => {
+    if (!isRecording && mediaRecorderRef.current?.state !== "recording") {
+      return;
+    }
+
+    setIsRecording(false);
+    stopRecordingVisuals();
+
+    const mediaRecorder = mediaRecorderRef.current;
+
+    if (mediaRecorder && mediaRecorder.state !== "inactive") {
+      mediaRecorder.stop();
+    }
+
+    stopRecordingStream();
+  };
+
+  const handleComposerButtonClick = () => {
+    if (isComposerButtonDisabled) {
+      return;
+    }
+
+    if (isRecording) {
+      stopVoiceRecording();
+      return;
+    }
+
+    if (hasText) {
+      handleSend();
+      return;
+    }
+
+    void startVoiceRecording();
   };
 
   return (
@@ -1086,9 +1425,16 @@ export default function LeftPane() {
               <input
                 className={styles.input}
                 type="text"
-                placeholder={t("placeholder")}
+                placeholder={
+                  isRecording
+                    ? t("recordingPlaceholder")
+                    : isTranscribing
+                      ? t("transcribingAudio")
+                      : t("placeholder")
+                }
                 aria-label="Message input"
                 value={message}
+                readOnly={isRecording || isTranscribing}
                 onChange={(e) => setMessage(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
@@ -1097,30 +1443,66 @@ export default function LeftPane() {
                   }
                 }}
               />
-              <button
-                className={`${styles.sendButton} ${hasText ? styles.sendButtonSend : styles.sendButtonMic
+              <div className={styles.voiceControls}>
+                <div
+                  className={`${styles.waveform} ${
+                    isRecording ? styles.waveformVisible : ""
                   }`}
-                aria-label={hasText ? "Send" : "Start recording"}
-                aria-disabled={isSending}
-                title={sendButtonTooltip}
-                type="button"
-                onClick={() => {
-                  if (hasText && !isSending) {
-                    handleSend();
+                  aria-hidden="true"
+                >
+                  {recordingLevels.map((level, index) => (
+                    <span
+                      key={index}
+                      className={styles.waveBar}
+                      style={{ height: `${level}px` }}
+                    />
+                  ))}
+                </div>
+
+                <button
+                  className={`${styles.sendButton} ${
+                    hasText
+                      ? styles.sendButtonSend
+                      : isRecording
+                        ? styles.sendButtonRecording
+                        : styles.sendButtonMic
+                  }`}
+                  aria-label={
+                    hasText
+                      ? "Send"
+                      : isRecording
+                        ? "Stop recording"
+                        : "Start recording"
                   }
-                }}
-              >
-                <img
-                  className={hasText ? styles.sendImg : styles.micImg}
-                  src={hasText ? SEND_ICON : MIC_ICON}
-                  alt=""
-                  width={25}
-                  height={25}
-                />
-              </button>
+                  aria-disabled={isComposerButtonDisabled}
+                  disabled={isComposerButtonDisabled}
+                  title={sendButtonTooltip}
+                  type="button"
+                  onClick={handleComposerButtonClick}
+                >
+                  {isRecording ? (
+                    <StopRoundedIcon className={styles.stopIcon} />
+                  ) : (
+                    <img
+                      className={hasText ? styles.sendImg : styles.micImg}
+                      src={hasText ? SEND_ICON : MIC_ICON}
+                      alt=""
+                      width={25}
+                      height={25}
+                    />
+                  )}
+                </button>
+              </div>
             </div>
 
-            <div className={styles.hint}>{t("hint")}</div>
+            <div
+              className={`${styles.hint} ${
+                voiceError ? styles.voiceError : ""
+              }`}
+              role={voiceError ? "status" : undefined}
+            >
+              {voiceError || t("hint")}
+            </div>
           </div>
         </div>
       </div>
