@@ -95,10 +95,25 @@
   border-top: 1px solid rgba(97, 64, 135, 0.14);
 }
 
+.feedbackToolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 .feedbackButtons {
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+.feedbackActionButtons {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-left: auto;
 }
 
 .feedbackIconButton {
@@ -111,6 +126,48 @@
 
 .feedbackIconButton:hover {
   background: rgba(255, 255, 255, 0.82) !important;
+}
+
+.listenWaveform {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  height: 14px;
+  margin-left: 2px;
+}
+
+.listenWaveform span {
+  width: 2px;
+  border-radius: 999px;
+  background: #9f5fe9;
+  animation: listenPulse 800ms ease-in-out infinite;
+}
+
+.listenWaveform span:nth-child(1) {
+  height: 5px;
+}
+
+.listenWaveform span:nth-child(2) {
+  height: 8px;
+  animation-delay: 120ms;
+}
+
+.listenWaveform span:nth-child(3) {
+  height: 11px;
+  animation-delay: 240ms;
+}
+
+@keyframes listenPulse {
+  0%,
+  100% {
+    transform: scaleY(0.72);
+    opacity: 0.55;
+  }
+
+  45% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
 }
 
 .feedbackSuccessMessage {

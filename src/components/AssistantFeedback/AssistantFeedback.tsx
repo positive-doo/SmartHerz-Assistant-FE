@@ -1,13 +1,23 @@
 // AssistantFeedback.tsx
 
-import type { ChangeEvent } from "react";
+import {
+  type ChangeEvent,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { Button, CircularProgress, IconButton, TextField, Tooltip } from "@mui/material";
 import {
+  Check as CheckIcon,
+  ContentCopyOutlined as ContentCopyOutlinedIcon,
   DescriptionOutlined as DescriptionOutlinedIcon,
   FileDownloadOutlined as FileDownloadOutlinedIcon,
+  Pause as PauseIcon,
   ThumbDown as ThumbDownIcon,
   ThumbUp as ThumbUpIcon,
+  VolumeUpOutlined as VolumeUpOutlinedIcon,
 } from "@mui/icons-material";
+import { useTranslation } from "../i18n/useTranslation";
 import styles from "./AssistantFeedback.module.css";
 
 export type FeedbackStatus = "Good" | "Bad" | null;
@@ -21,7 +31,10 @@ type PlanDownloadConfig = {
 
 interface AssistantFeedbackProps {
   planDownload?: PlanDownloadConfig | null;
+  actionText: string;
   likeStatus: FeedbackStatus;
+  isReadAloudActive?: boolean;
+  isReadAloudLoading?: boolean;
   feedbackVisible: boolean;
   isSubmitting: boolean;
   feedbackSubmitted: boolean;
@@ -29,6 +42,7 @@ interface AssistantFeedbackProps {
   feedbackEmail: string;
   onLikeClick: () => void;
   onDislikeClick: () => void;
+  onReadAloudClick?: () => void;
   onFeedbackChange: (
     event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => void;
@@ -41,7 +55,10 @@ interface AssistantFeedbackProps {
 
 export const AssistantFeedback = ({
   planDownload,
+  actionText,
   likeStatus,
+  isReadAloudActive = false,
+  isReadAloudLoading = false,
   feedbackVisible,
   isSubmitting,
   feedbackSubmitted,
@@ -49,11 +66,24 @@ export const AssistantFeedback = ({
   feedbackEmail,
   onLikeClick,
   onDislikeClick,
+  onReadAloudClick,
   onFeedbackChange,
   onFeedbackEmailChange,
   onCancel,
   onFeedbackSubmit,
 }: AssistantFeedbackProps) => {
+  const { t } = useTranslation();
+  const [copied, setCopied] = useState(false);
+  const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (copyTimeoutRef.current) {
+        clearTimeout(copyTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const tooltipSlotProps = {
     popper: {
       disablePortal: true,
@@ -96,6 +126,39 @@ export const AssistantFeedback = ({
     },
   };
 
+  const handleCopy = async () => {
+    const text = actionText.trim();
+
+    if (!text) {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+
+      if (copyTimeoutRef.current) {
+        clearTimeout(copyTimeoutRef.current);
+      }
+
+      copyTimeoutRef.current = setTimeout(() => {
+        setCopied(false);
+      }, 1500);
+    } catch {
+      // Clipboard can be unavailable outside HTTPS/localhost.
+    }
+  };
+
+  const usefulText = t("feedbackUsefulTooltip");
+  const notUsefulText = t("feedbackNotUsefulTooltip");
+  const copyText = copied ? t("copiedTooltip") : t("copyTextTooltip");
+  const readAloudText = isReadAloudActive
+    ? t("stopReadAloudTooltip")
+    : t("readAloudTooltip");
+  const downloadPdfText = planDownload?.isDownloading
+    ? t("downloadPdfLoading")
+    : t("downloadPdfButton");
+
   return (
     <div className={styles.feedbackWrap}>
       {planDownload && (
@@ -118,75 +181,136 @@ export const AssistantFeedback = ({
             className={styles.downloadButton}
             onClick={planDownload.onDownload}
             disabled={planDownload.isDownloading}
-            aria-label={`Preuzmi PDF: ${planDownload.title}`}
+            aria-label={`${t("downloadPdfAriaLabel")}: ${planDownload.title}`}
+            title={`${t("downloadPdfAriaLabel")}: ${planDownload.title}`}
           >
             {planDownload.isDownloading ? (
               <CircularProgress size={15} color="inherit" />
             ) : (
               <FileDownloadOutlinedIcon sx={{ fontSize: 16 }} />
             )}
-            <span>{planDownload.isDownloading ? "Preuzimam..." : "Preuzmi PDF"}</span>
+            <span>{downloadPdfText}</span>
           </button>
         </div>
       )}
 
       <div className={styles.feedbackSection}>
-        <div className={styles.feedbackButtons}>
-          <Tooltip
-            title="Odgovor je koristan"
-            arrow
-            placement="top"
-            disableInteractive
-            slotProps={tooltipSlotProps}
-          >
-            <span>
-              <IconButton
-                className={styles.feedbackIconButton}
-                onClick={onLikeClick}
-                disabled={isSubmitting}
-                aria-label="Odgovor je koristan"
-                size="small"
-              >
-                <ThumbUpIcon
-                  sx={{
-                    fontSize: 20,
-                    color: likeStatus === "Good" ? "#3F9D4A" : "inherit",
-                  }}
-                />
-              </IconButton>
-            </span>
-          </Tooltip>
+        <div className={styles.feedbackToolbar}>
+          <div className={styles.feedbackButtons}>
+            <Tooltip
+              title={usefulText}
+              arrow
+              placement="top"
+              disableInteractive
+              slotProps={tooltipSlotProps}
+            >
+              <span>
+                <IconButton
+                  className={styles.feedbackIconButton}
+                  onClick={onLikeClick}
+                  disabled={isSubmitting}
+                  aria-label={usefulText}
+                  size="small"
+                >
+                  <ThumbUpIcon
+                    sx={{
+                      fontSize: 20,
+                      color: likeStatus === "Good" ? "#3F9D4A" : "inherit",
+                    }}
+                  />
+                </IconButton>
+              </span>
+            </Tooltip>
 
-          <Tooltip
-            title="Odgovor nije koristan"
-            arrow
-            placement="top"
-            disableInteractive
-            slotProps={tooltipSlotProps}
-          >
-            <span>
-              <IconButton
-                className={styles.feedbackIconButton}
-                onClick={onDislikeClick}
-                disabled={isSubmitting}
-                aria-label="Odgovor nije koristan"
-                size="small"
-              >
-                <ThumbDownIcon
-                  sx={{
-                    fontSize: 20,
-                    color: likeStatus === "Bad" ? "#D33A2C" : "inherit",
-                  }}
-                />
-              </IconButton>
-            </span>
-          </Tooltip>
+            <Tooltip
+              title={notUsefulText}
+              arrow
+              placement="top"
+              disableInteractive
+              slotProps={tooltipSlotProps}
+            >
+              <span>
+                <IconButton
+                  className={styles.feedbackIconButton}
+                  onClick={onDislikeClick}
+                  disabled={isSubmitting}
+                  aria-label={notUsefulText}
+                  size="small"
+                >
+                  <ThumbDownIcon
+                    sx={{
+                      fontSize: 20,
+                      color: likeStatus === "Bad" ? "#D33A2C" : "inherit",
+                    }}
+                  />
+                </IconButton>
+              </span>
+            </Tooltip>
+          </div>
+
+          <div className={styles.feedbackActionButtons}>
+            <Tooltip
+              title={copyText}
+              arrow
+              placement="top"
+              disableInteractive
+              slotProps={tooltipSlotProps}
+            >
+              <span>
+                <IconButton
+                  className={styles.feedbackIconButton}
+                  onClick={handleCopy}
+                  aria-label={copyText}
+                  size="small"
+                >
+                  {copied ? (
+                    <CheckIcon sx={{ fontSize: 19, color: "#3F9D4A" }} />
+                  ) : (
+                    <ContentCopyOutlinedIcon sx={{ fontSize: 18 }} />
+                  )}
+                </IconButton>
+              </span>
+            </Tooltip>
+
+            <Tooltip
+              title={readAloudText}
+              arrow
+              placement="top"
+              disableInteractive
+              slotProps={tooltipSlotProps}
+            >
+              <span>
+                <IconButton
+                  className={styles.feedbackIconButton}
+                  onClick={onReadAloudClick}
+                  aria-label={readAloudText}
+                  size="small"
+                >
+                  {isReadAloudLoading ? (
+                    <CircularProgress size={15} color="inherit" />
+                  ) : isReadAloudActive ? (
+                    <PauseIcon sx={{ fontSize: 18 }} />
+                  ) : (
+                    <VolumeUpOutlinedIcon sx={{ fontSize: 19 }} />
+                  )}
+                </IconButton>
+              </span>
+            </Tooltip>
+
+            {isReadAloudActive && (
+              <span className={styles.listenWaveform} aria-hidden="true">
+                <span />
+                <span />
+                <span />
+              </span>
+            )}
+          </div>
         </div>
 
         {feedbackSubmitted && (
           <div className={styles.feedbackSuccessMessage}>
             <span aria-hidden="true">😊</span>
-            <span>Hvala na povratnoj informaciji!</span>
+            <span>{t("feedbackSuccessMessage")}</span>
           </div>
         )}
 
@@ -194,15 +318,15 @@ export const AssistantFeedback = ({
           <div className={styles.feedbackForm}>
             <div className={styles.feedbackFormHeader}>
               {likeStatus === "Bad"
-                ? "Reci mi šta nije dobro"
-                : "Želiš li da dodaš komentar?"}
+                ? t("feedbackBadHeader")
+                : t("feedbackGoodHeader")}
             </div>
 
             <TextField
               label={
                 likeStatus === "Bad"
-                  ? "Ostavi komentar"
-                  : "Ostavi komentar (opciono)"
+                  ? t("feedbackCommentLabelBad")
+                  : t("feedbackCommentLabelGood")
               }
               variant="outlined"
               value={feedback}
@@ -213,14 +337,14 @@ export const AssistantFeedback = ({
               disabled={isSubmitting}
               helperText={
                 likeStatus === "Bad"
-                  ? "Reci nam šta nije bilo dobro kako bismo poboljšali odgovor."
-                  : "Komentar nije obavezan, ali nam pomaže da poboljšamo odgovore."
+                  ? t("feedbackBadHelperText")
+                  : t("feedbackGoodHelperText")
               }
               sx={textFieldSx}
             />
 
             <TextField
-              label="Ostavi svoj email (opciono)"
+              label={t("feedbackEmailLabel")}
               variant="outlined"
               value={feedbackEmail}
               onChange={onFeedbackEmailChange}
@@ -235,7 +359,7 @@ export const AssistantFeedback = ({
                 disabled={isSubmitting}
                 className={styles.feedbackCancelButton}
               >
-                Odustani
+                {t("feedbackCancelButton")}
               </Button>
 
               <Button
@@ -247,7 +371,9 @@ export const AssistantFeedback = ({
                   isSubmitting ? <CircularProgress size={15} color="inherit" /> : null
                 }
               >
-                {isSubmitting ? "Šaljem..." : "Pošalji"}
+                {isSubmitting
+                  ? t("feedbackSubmittingButton")
+                  : t("feedbackSubmitButton")}
               </Button>
             </div>
           </div>

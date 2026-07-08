@@ -43,9 +43,8 @@ const SEND_ICON =
   "https://cybercompany.ai/wp-content/uploads/2026/05/ArrowRightSquareFill.svg";
 
 const CHAT_ERROR_MESSAGE = "Doslo je do greske pri komunikaciji sa serverom.";
-const PLAN_DOWNLOAD_SUBTITLE =
-  "Preuzmite plan i koristite ga kada odete ili kada nemate internet";
 const RECORDING_BAR_COUNT = 5;
+const WELCOME_MESSAGE_ID = "welcome-message";
 
 type WindowWithWebkitAudioContext = Window &
   typeof globalThis & {
@@ -86,16 +85,85 @@ const extractStreamContent = (eventBlock: string): string | null => {
 
 const finalizeAssistantText = (text: string) => text.replace(/\u258C$/, "");
 
+const transliterateSerbianCyrillicToLatin = (text: string) => {
+  const map: Record<string, string> = {
+    А: "A",
+    Б: "B",
+    В: "V",
+    Г: "G",
+    Д: "D",
+    Ђ: "Đ",
+    Е: "E",
+    Ж: "Ž",
+    З: "Z",
+    И: "I",
+    Ј: "J",
+    К: "K",
+    Л: "L",
+    Љ: "Lj",
+    М: "M",
+    Н: "N",
+    Њ: "Nj",
+    О: "O",
+    П: "P",
+    Р: "R",
+    С: "S",
+    Т: "T",
+    Ћ: "Ć",
+    У: "U",
+    Ф: "F",
+    Х: "H",
+    Ц: "C",
+    Ч: "Č",
+    Џ: "Dž",
+    Ш: "Š",
+
+    а: "a",
+    б: "b",
+    в: "v",
+    г: "g",
+    д: "d",
+    ђ: "đ",
+    е: "e",
+    ж: "ž",
+    з: "z",
+    и: "i",
+    ј: "j",
+    к: "k",
+    л: "l",
+    љ: "lj",
+    м: "m",
+    н: "n",
+    њ: "nj",
+    о: "o",
+    п: "p",
+    р: "r",
+    с: "s",
+    т: "t",
+    ћ: "ć",
+    у: "u",
+    ф: "f",
+    х: "h",
+    ц: "c",
+    ч: "č",
+    џ: "dž",
+    ш: "š",
+  };
+
+  return text.replace(/[А-ШЂЈЉЊЋЏа-шђјљњћџ]/g, (char) => map[char] ?? char);
+};
+
 const normalizePlanText = (text: string) =>
-  text
+  transliterateSerbianCyrillicToLatin(text)
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase();
 
 const getTravelPlanDayCount = (text: string) => {
+  const normalizedText = normalizePlanText(text);
   const uniqueDays = new Set<number>();
 
-  for (const match of normalizePlanText(text).matchAll(/\bdan\s*(\d{1,2})\b/g)) {
+  for (const match of normalizedText.matchAll(/\b(?:dan|day)\s*(\d{1,2})\b/g)) {
     uniqueDays.add(Number(match[1]));
   }
 
@@ -114,10 +182,14 @@ const looksLikeCompleteTravelPlan = (text: string) => {
 
   const dayCount = getTravelPlanDayCount(text);
   const hasPlanSignal =
-    /\b(plan|itinerar|program)\b/.test(normalizedText) &&
-    /\b(putovanja|puta|izleta|boravka|dan|dana)\b/.test(normalizedText);
+    /\b(plan|itinerar|itinerary|program|agenda|schedule)\b/.test(
+      normalizedText
+    ) &&
+    /\b(putovanja|puta|izleta|boravka|dan|dana|trip|travel|excursion|stay|day|days)\b/.test(
+      normalizedText
+    );
   const hasTravelStructure =
-    /\b(lokacija|vrijeme|vreme|smjestaj|smestaj|povratak|rucak|vecera|pre podne|popodne|jutro)\b/.test(
+    /\b(lokacija|location|vrijeme|vreme|time|smjestaj|smestaj|accommodation|povratak|return|rucak|lunch|vecera|dinner|pre podne|morning|popodne|afternoon|jutro|arrival|evening|local guide tips)\b/.test(
       normalizedText
     );
 
@@ -153,22 +225,25 @@ const removePdfIcons = (text: string) =>
 const isFirstDayHeading = (line: string) => {
   const normalizedLine = normalizePlanText(cleanPlanLine(line));
 
-  return /^(dan\s*1|prvi\s+dan)\b/.test(normalizedLine);
+  return /^(dan\s*1|prvi\s+dan|day\s*1|first\s+day)\b/.test(
+    normalizedLine
+  );
 };
 
 const isGuideTipsHeading = (line: string) => {
   const normalizedLine = normalizePlanText(cleanPlanLine(line));
 
   return (
-    /male\s+cake/.test(normalizedLine) &&
-    /(vodica|lokalnog\s+vodica)/.test(normalizedLine)
+    (/male\s+cake/.test(normalizedLine) &&
+      /(vodica|lokalnog\s+vodica)/.test(normalizedLine)) ||
+    /local\s+guide\s+tips/.test(normalizedLine)
   );
 };
 
 const isTrailingPlanSuggestion = (line: string) => {
   const normalizedLine = normalizePlanText(cleanPlanLine(line));
 
-  return /^(ako\s+(zelis|zelite)|zelis\s+li|zelite\s+li|mogu\s+|ukoliko\s+(zelis|zelite))\b/.test(
+  return /^(ako\s+(zelis|zelite)|zelis\s+li|zelite\s+li|mogu\s+|ukoliko\s+(zelis|zelite)|if\s+you\s+(want|would\s+like)|would\s+you\s+like|i\s+can\s+)\b/.test(
     normalizedLine
   );
 };
@@ -226,8 +301,12 @@ const getPlanHeading = (text: string) => {
       const normalizedLine = normalizePlanText(line);
 
       return (
-        /^(plan|itinerar|program)\b/.test(normalizedLine) &&
-        /\b(putovanja|puta|izleta|boravka|dan|dana)\b/.test(normalizedLine)
+        /^(plan|itinerar|program|itinerary|travel\s+plan|trip\s+plan)\b/.test(
+          normalizedLine
+        ) &&
+        /\b(putovanja|puta|izleta|boravka|dan|dana|trip|travel|excursion|stay|day|days)\b/.test(
+          normalizedLine
+        )
       );
     });
 
@@ -236,42 +315,62 @@ const getPlanHeading = (text: string) => {
   }
 
   const cleanedHeading = heading
-    .replace(/^(plan|itinerar|program)(\s+putovanja)?\s*(za)?\s*[:\-–—]?\s*/i, "")
-    .replace(/^za\s+/i, "")
+    .replace(
+      /^(plan|itinerar|program|itinerary|travel\s+plan|trip\s+plan)(\s+(putovanja|trip|travel))?\s*(za|for)?\s*[:\-–—]?\s*/i,
+      ""
+    )
+    .replace(/^(za|for)\s+/i, "")
     .trim();
 
-  return cleanedHeading && normalizePlanText(cleanedHeading) !== "putovanja"
+  const normalizedHeading = normalizePlanText(cleanedHeading);
+
+  return cleanedHeading &&
+    normalizedHeading !== "putovanja" &&
+    normalizedHeading !== "trip" &&
+    normalizedHeading !== "travel"
     ? cleanedHeading
     : "";
 };
 
-const buildPlanDownloadTitle = (text: string) => {
+const buildPlanDownloadTitle = (
+  text: string,
+  translate: (key: string) => string
+) => {
   const heading = getPlanHeading(text);
+  const baseTitle = translate("planDownloadTitle");
 
   if (heading) {
-    return `Plan putovanja — ${heading}`;
+    return `${baseTitle} — ${heading}`;
   }
 
   const dayCount = getTravelPlanDayCount(text);
 
   if (dayCount > 0) {
-    return `Plan putovanja — ${dayCount} ${dayCount === 1 ? "dan" : "dana"}`;
+    const dayLabel =
+      dayCount === 1
+        ? translate("planDownloadDay")
+        : translate("planDownloadDays");
+
+    return `${baseTitle} — ${dayCount} ${dayLabel}`;
   }
 
-  return "Plan putovanja";
+  return baseTitle;
 };
 
-const sanitizeDownloadFilename = (filename: string) => {
+const sanitizeDownloadFilename = (
+  filename: string,
+  fallbackFilename = "Plan putovanja"
+) => {
   const cleanedFilename = filename
     .replace(/[\\/:*?"<>|]+/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 
-  return cleanedFilename || "Plan putovanja";
+  return cleanedFilename || fallbackFilename;
 };
 
-const buildPdfFilename = (title: string) =>
-  `${sanitizeDownloadFilename(title).replace(/\.pdf$/i, "")}.pdf`;
+const buildPdfFilename = (title: string, fallbackFilename = "Plan putovanja") =>
+  `${sanitizeDownloadFilename(title, fallbackFilename).replace(/\.pdf$/i, "")}.pdf`;
 
 const getPdfFilenameFromContentDisposition = (
   contentDisposition: string | null,
@@ -566,10 +665,17 @@ export default function LeftPane() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [sessionId, setSessionId] = useState("");
   const [isSending, setIsSending] = useState(false);
-  const [likeStatus, setLikeStatus] = useState<FeedbackStatus>(null);
+  const [feedbackStatuses, setFeedbackStatuses] = useState<
+    Record<string, FeedbackStatus>
+  >({});
+  const [feedbackTargetMessageId, setFeedbackTargetMessageId] = useState<
+    string | null
+  >(null);
   const [feedbackVisible, setFeedbackVisible] = useState(false);
   const [isFeedbackSubmitting, setIsFeedbackSubmitting] = useState(false);
-  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+  const [feedbackSubmittedMessageId, setFeedbackSubmittedMessageId] = useState<
+    string | null
+  >(null);
   const [feedback, setFeedback] = useState("");
   const [feedbackEmail, setFeedbackEmail] = useState("");
   const [isPlanDownloading, setIsPlanDownloading] = useState(false);
@@ -579,8 +685,17 @@ export default function LeftPane() {
   const [recordingLevels, setRecordingLevels] = useState<number[]>(
     createDefaultRecordingLevels
   );
+  const [readingMessageId, setReadingMessageId] = useState<string | null>(null);
+  const [readingLoadingMessageId, setReadingLoadingMessageId] = useState<
+    string | null
+  >(null);
   const messagesRef = useRef<HTMLDivElement | null>(null);
   const streamAbortRef = useRef<AbortController | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const readAloudAbortRef = useRef<AbortController | null>(null);
+  const speechLoadingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
@@ -588,7 +703,7 @@ export default function LeftPane() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordingChunksRef = useRef<Blob[]>([]);
   const shouldUploadRecordingRef = useRef(false);
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
   const hasText = message.trim().length > 0;
   const {
     hasUserStarted,
@@ -630,6 +745,22 @@ export default function LeftPane() {
 
       mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
       void audioContextRef.current?.close();
+
+      if (speechLoadingTimeoutRef.current) {
+        clearTimeout(speechLoadingTimeoutRef.current);
+      }
+
+      readAloudAbortRef.current?.abort();
+
+      if (audioRef.current) {
+        audioRef.current.pause();
+
+        if (audioRef.current.src.startsWith("blob:")) {
+          URL.revokeObjectURL(audioRef.current.src);
+        }
+
+        audioRef.current = null;
+      }
     };
   }, []);
 
@@ -653,6 +784,7 @@ export default function LeftPane() {
       : hasText
         ? t("sendButton")
         : t("recordButton");
+  const welcomeMessageText = t("assistantIntro");
 
   const lastAssistantMessageId =
     [...messages].reverse().find((item) => item.role === "assistant" && item.isFinal)
@@ -768,36 +900,35 @@ export default function LeftPane() {
     }
   };
 
-  const getLastFeedbackContext = () => {
-    let lastAssistantIndex = -1;
-
-    for (let index = messages.length - 1; index >= 0; index -= 1) {
-      if (messages[index].role === "assistant" && messages[index].isFinal) {
-        lastAssistantIndex = index;
-        break;
-      }
+  const getFeedbackContext = (messageId: string) => {
+    if (messageId === WELCOME_MESSAGE_ID) {
+      return { lastQuestion: "", lastAnswer: welcomeMessageText };
     }
 
-    if (lastAssistantIndex === -1) {
+    const assistantIndex = messages.findIndex(
+      (item) => item.id === messageId && item.role === "assistant"
+    );
+
+    if (assistantIndex === -1) {
       return { lastQuestion: "", lastAnswer: "" };
     }
 
     const lastQuestion =
-      [...messages.slice(0, lastAssistantIndex)]
+      [...messages.slice(0, assistantIndex)]
         .reverse()
         .find((item) => item.role === "user")?.text ?? "";
-
-    const lastAnswer = messages[lastAssistantIndex].text;
+    const lastAnswer = messages[assistantIndex].text;
 
     return { lastQuestion, lastAnswer };
   };
 
   const submitFeedback = async (
+    feedbackContext: { lastQuestion: string; lastAnswer: string },
     status: Exclude<FeedbackStatus, null>,
     feedbackText: string,
     email: string
   ) => {
-    const { lastQuestion, lastAnswer } = getLastFeedbackContext();
+    const { lastQuestion, lastAnswer } = feedbackContext;
 
     if (!lastAnswer.trim()) {
       return;
@@ -815,7 +946,7 @@ export default function LeftPane() {
       body: JSON.stringify({
         sessionId: activeSessionId,
         status,
-        feedback: feedbackText.trim() || "Nije ostavljen komentar",
+        feedback: feedbackText.trim() || t("noFeedbackComment"),
         feedbackEmail: email.trim(),
         lastQuestion,
         lastAnswer,
@@ -827,20 +958,33 @@ export default function LeftPane() {
     }
   };
 
-  const handleLikeClick = () => {
+  const handleFeedbackStatusClick = (
+    messageId: string,
+    status: Exclude<FeedbackStatus, null>
+  ) => {
     if (isFeedbackSubmitting) {
       return;
     }
 
-    setLikeStatus("Good");
+    setFeedbackStatuses((prevStatuses) => ({
+      ...prevStatuses,
+      [messageId]: status,
+    }));
+    if (feedbackTargetMessageId !== messageId) {
+      setFeedback("");
+      setFeedbackEmail("");
+    }
+    setFeedbackTargetMessageId(messageId);
     setFeedbackVisible(true);
-    setFeedbackSubmitted(false);
+    setFeedbackSubmittedMessageId(null);
   };
 
-  const handleDislikeClick = () => {
-    setLikeStatus("Bad");
-    setFeedbackVisible(true);
-    setFeedbackSubmitted(false);
+  const handleLikeClick = (messageId: string) => {
+    handleFeedbackStatusClick(messageId, "Good");
+  };
+
+  const handleDislikeClick = (messageId: string) => {
+    handleFeedbackStatusClick(messageId, "Bad");
   };
 
   const handleFeedbackChange = (
@@ -856,25 +1000,48 @@ export default function LeftPane() {
   };
 
   const handleCancelFeedback = () => {
+    const activeFeedbackMessageId = feedbackTargetMessageId;
+
+    if (activeFeedbackMessageId) {
+      setFeedbackStatuses((prevStatuses) => {
+        const nextStatuses = { ...prevStatuses };
+        delete nextStatuses[activeFeedbackMessageId];
+        return nextStatuses;
+      });
+    }
+
     setFeedback("");
     setFeedbackEmail("");
-    setLikeStatus(null);
+    setFeedbackTargetMessageId(null);
     setFeedbackVisible(false);
-    setFeedbackSubmitted(false);
+    setFeedbackSubmittedMessageId(null);
   };
 
   const handleFeedbackSubmit = async () => {
-    if (!likeStatus || (likeStatus === "Bad" && !feedback.trim())) {
+    if (!feedbackTargetMessageId) {
+      return;
+    }
+
+    const activeFeedbackMessageId = feedbackTargetMessageId;
+    const activeLikeStatus = feedbackStatuses[activeFeedbackMessageId] ?? null;
+
+    if (!activeLikeStatus || (activeLikeStatus === "Bad" && !feedback.trim())) {
       return;
     }
 
     try {
       setIsFeedbackSubmitting(true);
-      await submitFeedback(likeStatus, feedback, feedbackEmail);
+      await submitFeedback(
+        getFeedbackContext(activeFeedbackMessageId),
+        activeLikeStatus,
+        feedback,
+        feedbackEmail
+      );
       setFeedbackVisible(false);
       setFeedback("");
       setFeedbackEmail("");
-      setFeedbackSubmitted(true);
+      setFeedbackTargetMessageId(null);
+      setFeedbackSubmittedMessageId(activeFeedbackMessageId);
     } catch (error) {
       console.error("Failed to send feedback:", error);
     } finally {
@@ -887,8 +1054,8 @@ export default function LeftPane() {
       return;
     }
 
-    const title = buildPlanDownloadTitle(planText);
-    const fallbackFilename = buildPdfFilename(title);
+    const title = buildPlanDownloadTitle(planText, t);
+    const fallbackFilename = buildPdfFilename(title, t("planDownloadTitle"));
     const pdfMarkdown = buildPlanPdfMarkdown(planText);
     const formData = new FormData();
 
@@ -962,9 +1129,9 @@ export default function LeftPane() {
       },
     ]);
     setMessage("");
-    setLikeStatus(null);
+    setFeedbackTargetMessageId(null);
     setFeedbackVisible(false);
-    setFeedbackSubmitted(false);
+    setFeedbackSubmittedMessageId(null);
     setFeedback("");
     setFeedbackEmail("");
     clearCategories();
@@ -991,7 +1158,8 @@ export default function LeftPane() {
             content: messageContent,
           },
           play_audio_response: false,
-          language: "sr",
+          language: lang,
+          assistant_message_id: assistantMessageId,
         }),
       });
 
@@ -1022,6 +1190,147 @@ export default function LeftPane() {
 
   const handleSend = () => {
     void sendMessageText(message);
+  };
+
+  const clearReadAloudLoading = () => {
+    if (speechLoadingTimeoutRef.current) {
+      clearTimeout(speechLoadingTimeoutRef.current);
+      speechLoadingTimeoutRef.current = null;
+    }
+  };
+
+  const stopReadAloud = () => {
+    clearReadAloudLoading();
+
+    readAloudAbortRef.current?.abort();
+    readAloudAbortRef.current = null;
+
+    if (audioRef.current) {
+      audioRef.current.pause();
+
+      if (audioRef.current.src.startsWith("blob:")) {
+        URL.revokeObjectURL(audioRef.current.src);
+      }
+
+      audioRef.current = null;
+    }
+
+    setReadingLoadingMessageId(null);
+    setReadingMessageId(null);
+  };
+
+  const handleReadAloudClick = async (messageId: string, text: string) => {
+    if (!text.trim()) {
+      return;
+    }
+
+    if (
+      readingMessageId === messageId ||
+      readingLoadingMessageId === messageId
+    ) {
+      stopReadAloud();
+      return;
+    }
+
+    stopReadAloud();
+
+    const abortController = new AbortController();
+    readAloudAbortRef.current = abortController;
+
+    try {
+      setVoiceError("");
+      setReadingLoadingMessageId(messageId);
+      setReadingMessageId(null);
+
+      const response = await fetch(`${CHAT_API_BASE_URL}/tts`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Session-ID": ensureSessionId(),
+        },
+        credentials: "include",
+        signal: abortController.signal,
+        body: JSON.stringify({
+          message_id: messageId,
+          text: messageId === WELCOME_MESSAGE_ID ? text : undefined,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`TTS request failed with status ${response.status}`);
+      }
+
+      const audioBlob = await response.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+
+      audioRef.current = audio;
+
+      const finishReading = () => {
+        if (audioRef.current !== audio) {
+          return;
+        }
+
+        clearReadAloudLoading();
+
+        if (audio.src.startsWith("blob:")) {
+          URL.revokeObjectURL(audio.src);
+        }
+
+        audioRef.current = null;
+        setReadingLoadingMessageId(null);
+        setReadingMessageId(null);
+      };
+
+      audio.onplay = () => {
+        if (audioRef.current !== audio) {
+          return;
+        }
+
+        clearReadAloudLoading();
+        setReadingLoadingMessageId(null);
+        setReadingMessageId(messageId);
+      };
+
+      audio.onended = finishReading;
+      audio.onerror = finishReading;
+
+      speechLoadingTimeoutRef.current = setTimeout(() => {
+        if (audioRef.current !== audio) {
+          return;
+        }
+
+        setReadingLoadingMessageId(null);
+        setReadingMessageId(messageId);
+      }, 700);
+
+      await audio.play();
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        return;
+      }
+
+      console.error("Read aloud failed:", error);
+      setVoiceError(t("readAloudUnavailable"));
+      clearReadAloudLoading();
+
+      if (audioRef.current) {
+        audioRef.current.pause();
+
+        if (audioRef.current.src.startsWith("blob:")) {
+          URL.revokeObjectURL(audioRef.current.src);
+        }
+
+        audioRef.current = null;
+      }
+
+      setReadingLoadingMessageId(null);
+      setReadingMessageId(null);
+    } finally {
+      if (readAloudAbortRef.current === abortController) {
+        readAloudAbortRef.current = null;
+      }
+    }
   };
 
   const updateRecordingLevels = () => {
@@ -1312,7 +1621,9 @@ export default function LeftPane() {
           >
             <div className={styles.assistantBubbleWrap}>
               <div className={styles.assistantBubble}>
-                <div className={styles.bubbleText}>{t("assistantIntro")}</div>
+                <div className={styles.bubbleText}>
+                  {welcomeMessageText}
+                </div>
               </div>
 
               <div className={styles.bubbleAvatar}>
@@ -1337,8 +1648,8 @@ export default function LeftPane() {
                   chatMessage.isFinal &&
                   looksLikeCompleteTravelPlan(chatMessage.text)
                     ? {
-                      title: buildPlanDownloadTitle(chatMessage.text),
-                      subtitle: PLAN_DOWNLOAD_SUBTITLE,
+                      title: buildPlanDownloadTitle(chatMessage.text, t),
+                      subtitle: t("planDownloadSubtitle"),
                       isDownloading: isPlanDownloading,
                       onDownload: () => handleDownloadPlan(chatMessage.text),
                     }
@@ -1369,19 +1680,38 @@ export default function LeftPane() {
                           </span>
                         )}
 
-                        {isLastAssistantMessage &&
-                          chatMessage.isFinal &&
+                        {chatMessage.isFinal &&
                           chatMessage.text.trim().length > 0 && (
                             <AssistantFeedback
                               planDownload={planDownload}
-                              likeStatus={likeStatus}
-                              feedbackVisible={feedbackVisible}
+                              actionText={chatMessage.text}
+                              likeStatus={feedbackStatuses[chatMessage.id] ?? null}
+                              isReadAloudActive={
+                                readingMessageId === chatMessage.id
+                              }
+                              isReadAloudLoading={
+                                readingLoadingMessageId === chatMessage.id
+                              }
+                              feedbackVisible={
+                                feedbackVisible &&
+                                feedbackTargetMessageId === chatMessage.id
+                              }
                               isSubmitting={isFeedbackSubmitting}
-                              feedbackSubmitted={feedbackSubmitted}
+                              feedbackSubmitted={
+                                feedbackSubmittedMessageId === chatMessage.id
+                              }
                               feedback={feedback}
                               feedbackEmail={feedbackEmail}
-                              onLikeClick={handleLikeClick}
-                              onDislikeClick={handleDislikeClick}
+                              onLikeClick={() => handleLikeClick(chatMessage.id)}
+                              onDislikeClick={() =>
+                                handleDislikeClick(chatMessage.id)
+                              }
+                              onReadAloudClick={() =>
+                                handleReadAloudClick(
+                                  chatMessage.id,
+                                  chatMessage.text
+                                )
+                              }
                               onFeedbackChange={handleFeedbackChange}
                               onFeedbackEmailChange={handleFeedbackEmailChange}
                               onCancel={handleCancelFeedback}
@@ -1432,7 +1762,7 @@ export default function LeftPane() {
                       ? t("transcribingAudio")
                       : t("placeholder")
                 }
-                aria-label="Message input"
+                aria-label={t("chatInputAriaLabel")}
                 value={message}
                 readOnly={isRecording || isTranscribing}
                 onChange={(e) => setMessage(e.target.value)}
@@ -1469,10 +1799,10 @@ export default function LeftPane() {
                   }`}
                   aria-label={
                     hasText
-                      ? "Send"
+                      ? t("sendAriaLabel")
                       : isRecording
-                        ? "Stop recording"
-                        : "Start recording"
+                        ? t("stopRecordingAriaLabel")
+                        : t("startRecordingAriaLabel")
                   }
                   aria-disabled={isComposerButtonDisabled}
                   disabled={isComposerButtonDisabled}
