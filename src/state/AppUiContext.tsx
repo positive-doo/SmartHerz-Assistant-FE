@@ -39,7 +39,9 @@ type AppUiState = {
   clearCategories: () => void;
 
   activeExperienceIds: ExperienceFilterId[];
-  setActiveExperienceIds: (ids: ExperienceFilterId[]) => void;
+  setActiveExperienceIds: React.Dispatch<
+    React.SetStateAction<ExperienceFilterId[]>
+  >;
   clearExperienceFilters: () => void;
 
   suggestionsByCategory: SuggestionsByCategory;

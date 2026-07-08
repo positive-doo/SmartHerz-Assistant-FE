@@ -601,11 +601,28 @@
 }
 
 .experienceOptionRoot {
+  align-items: center;
   font-weight: 800;
 }
 
 .experienceOptionNested {
   font-weight: 500;
+}
+
+.experienceRole {
+  display: inline-flex;
+  align-items: center;
+  min-height: 18px;
+  padding: 3px 7px;
+  border-radius: 4px;
+  background: #f0ddff;
+  color: #7c2dff;
+  font-size: 9px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .experienceChildren {

@@ -6,132 +6,215 @@ export type ExperienceFilterId = string;
 export type ExperienceFilterNode = {
   id: ExperienceFilterId;
   label: LocalizedString;
+  role?: LocalizedString;
   children?: ExperienceFilterNode[];
 };
 
 export const experienceFilterColumns: ExperienceFilterNode[][] = [
   [
     {
-      id: "active_holidays",
-      label: { bh: "Aktivni odmor", en: "Active holidays" },
+      id: "culture",
+      label: { bh: "Kultura", en: "Culture" },
+      role: { bh: "ISTRAŽIVAČ", en: "EXPLORER" },
       children: [
         {
-          id: "hiking_mountaineering",
-          label: { bh: "Planinarenje i alpinizam", en: "Hiking and Mountaineering" },
-        },
-        { id: "biking", label: { bh: "Biciklizam", en: "Biking" } },
-        {
-          id: "water_activities",
-          label: { bh: "Aktivnosti na vodi", en: "Water activities" },
-        },
-        {
-          id: "adrenaline_sports",
-          label: { bh: "Adrenalinski sportovi", en: "Adrenaline sports" },
-        },
-        {
-          id: "winter_activities",
-          label: { bh: "Zimske aktivnosti", en: "Winter activities" },
-        },
-        { id: "horse_riding", label: { bh: "Jahanje", en: "Horse riding" } },
-        { id: "golf", label: { bh: "Golf", en: "Golf" } },
-      ],
-    },
-    {
-      id: "spas_health_resorts",
-      label: { bh: "Banje i wellness centri", en: "Spas and health resorts" },
-      children: [
-        { id: "health", label: { bh: "Zdravlje", en: "Health" } },
-        {
-          id: "pampering_treatment",
-          label: { bh: "Njega i tretmani", en: "Pampering and treatment" },
-        },
-        {
-          id: "spa_water_experiences",
+          id: "historical_archaeological_heritage",
           label: {
-            bh: "Vodena iskustva u banjama",
-            en: "Water experiences in spas",
+            bh: "Istorijsko i arheološko naslijeđe",
+            en: "Historical and archaeological heritage",
+          },
+        },
+        {
+          id: "religious_heritage",
+          label: { bh: "Religijsko naslijeđe", en: "Religious heritage" },
+        },
+        {
+          id: "museums_monuments_architecture",
+          label: {
+            bh: "Muzeji, spomenici i arhitektura",
+            en: "Museums, monuments and architecture",
+          },
+        },
+        { id: "stecak", label: { bh: "Stećci", en: "Stećci" } },
+        {
+          id: "cultural_routes",
+          label: { bh: "Kulturne rute", en: "Cultural routes" },
+        },
+        {
+          id: "folklore_old_crafts",
+          label: { bh: "Folklor i stari zanati", en: "Folklore and old crafts" },
+        },
+        {
+          id: "myths_legends_famous_people",
+          label: {
+            bh: "Mitovi, legende i poznate ličnosti",
+            en: "Myths, legends and famous people",
           },
         },
       ],
     },
-  ],
-  [
     {
-      id: "discover_nature",
-      label: { bh: "Otkrij prirodu", en: "Discover nature" },
+      id: "gastronomy",
+      label: { bh: "Gastronomija", en: "Gastronomy" },
+      role: { bh: "GASTRO TURIST", en: "GASTRO TOURIST" },
       children: [
         {
-          id: "herzegovina_waters",
-          label: { bh: "Vode Hercegovine", en: "Herzegovina's waters" },
+          id: "traditional_dishes",
+          label: { bh: "Tradicionalna jela", en: "Traditional dishes" },
         },
         {
-          id: "nature_parks",
-          label: { bh: "Parkovi prirode", en: "Nature parks" },
-        },
-        { id: "caves", label: { bh: "Pećine", en: "Caves" } },
-        {
-          id: "mountains_hills",
-          label: { bh: "Planine i brda", en: "Mountains and hills" },
-        },
-        { id: "countryside", label: { bh: "Selo i priroda", en: "Countryside" } },
-      ],
-    },
-    {
-      id: "food_wine",
-      label: { bh: "Hrana i vino", en: "Food and wine" },
-      children: [
-        {
-          id: "flavours_herzegovina",
-          label: { bh: "Ukusi Hercegovine", en: "The flavours of Herzegovina" },
+          id: "wineries_tasting_rooms",
+          label: {
+            bh: "Vinarije i degustacione sale",
+            en: "Wineries and tasting rooms",
+          },
         },
         {
-          id: "wines_herzegovina",
-          label: { bh: "Vina Hercegovine", en: "Wines of Herzegovina" },
+          id: "cheese_kaymak_honey_producers",
+          label: {
+            bh: "Proizvođači sira, kajmaka i meda",
+            en: "Cheese, kaymak and honey producers",
+          },
         },
-        { id: "where_to_eat", label: { bh: "Gdje jesti", en: "Where to eat" } },
+        { id: "gastro_tours", label: { bh: "Gastro ture", en: "Gastro tours" } },
         {
-          id: "best_for_gourmets",
-          label: { bh: "Najbolje za gurmane", en: "The best for gourmets" },
+          id: "slow_food_producers",
+          label: { bh: "Slow Food proizvođači", en: "Slow Food producers" },
         },
-        { id: "locally_typical", label: { bh: "Lokalno i tipično", en: "Locally typical" } },
       ],
     },
   ],
   [
     {
-      id: "arts_culture",
-      label: { bh: "Umjetnost i kultura", en: "Arts and Culture" },
+      id: "nature",
+      label: { bh: "Priroda", en: "Nature" },
+      role: { bh: "PLANINAR", en: "HIKER" },
+      children: [
+        {
+          id: "mountains_viewpoints",
+          label: { bh: "Planine i vidikovci", en: "Mountains and viewpoints" },
+        },
+        {
+          id: "rivers_lakes_springs",
+          label: { bh: "Rijeke, jezera i izvori", en: "Rivers, lakes and springs" },
+        },
+        {
+          id: "protected_areas_caves",
+          label: {
+            bh: "Zaštićena područja i pećine",
+            en: "Protected areas and caves",
+          },
+        },
+        { id: "flora_fauna", label: { bh: "Flora i fauna", en: "Flora and fauna" } },
+        {
+          id: "medicinal_herbs_forest_fruits",
+          label: {
+            bh: "Ljekovito bilje i šumski plodovi",
+            en: "Medicinal herbs and forest fruits",
+          },
+        },
+      ],
     },
-    { id: "shopping", label: { bh: "Kupovina", en: "Shopping" } },
     {
-      id: "family_fun",
-      label: { bh: "Porodična zabava", en: "Family fun" },
+      id: "adventure",
+      label: { bh: "Avantura", en: "Adventure" },
+      role: { bh: "AVANTURISTA", en: "ADVENTURER" },
+      children: [
+        { id: "hiking_trekking", label: { bh: "Hiking / trekking", en: "Hiking / trekking" } },
+        { id: "cycling", label: { bh: "Biciklizam", en: "Cycling" } },
+        {
+          id: "kayak_canoe_boat",
+          label: { bh: "Kajak, kanu i vožnja barkom", en: "Kayak, canoe and boat rides" },
+        },
+        {
+          id: "climbing_via_ferrata",
+          label: { bh: "Penjanje i via ferrata", en: "Climbing and via ferrata" },
+        },
+        { id: "paragliding", label: { bh: "Paraglajding", en: "Paragliding" } },
+        {
+          id: "outdoor_activities",
+          label: { bh: "Outdoor aktivnosti", en: "Outdoor activities" },
+        },
+      ],
+    },
+  ],
+  [
+    {
+      id: "family",
+      label: { bh: "Porodica", en: "Family" },
+      role: { bh: "PORODICA", en: "FAMILY" },
+      children: [
+        {
+          id: "children_activities",
+          label: { bh: "Aktivnosti za djecu", en: "Activities for children" },
+        },
+        {
+          id: "family_trips",
+          label: { bh: "Porodični izleti", en: "Family trips" },
+        },
+        {
+          id: "play_relax_space",
+          label: { bh: "Prostor za igru i opuštanje", en: "Play and relaxation spaces" },
+        },
+        {
+          id: "family_friendly_content",
+          label: {
+            bh: "Sadržaji prilagođeni porodicama",
+            en: "Family-friendly content",
+          },
+        },
+      ],
     },
     {
-      id: "romantic_getaways",
-      label: { bh: "Romantični odmori", en: "Romantic getaways" },
-    },
-    {
-      id: "unique_experiences",
-      label: {
-        bh: "Jedinstvena iskustva Hercegovine",
-        en: "Herzegovina Unique Experiences",
-      },
-    },
-    { id: "events_experience", label: { bh: "Događaji", en: "Events" } },
-    {
-      id: "tour_guides",
-      label: { bh: "Turistički vodiči", en: "Tour guides" },
-    },
-    {
-      id: "sound_stories",
-      label: {
-        bh: "Zvučne priče iz Hercegovine",
-        en: "Sound stories from Herzegovina",
-      },
+      id: "other",
+      label: { bh: "Ostalo", en: "Other" },
+      children: [
+        {
+          id: "romantic_getaways",
+          label: { bh: "Romantični odmori", en: "Romantic getaways" },
+        },
+        { id: "shopping", label: { bh: "Šoping", en: "Shopping" } },
+        { id: "events_experience", label: { bh: "Događaji", en: "Events" } },
+      ],
     },
   ],
 ];
+
+export const getExperienceFilterDescendantIds = (
+  item: ExperienceFilterNode
+): ExperienceFilterId[] =>
+  item.children?.flatMap((child) => [
+    child.id,
+    ...getExperienceFilterDescendantIds(child),
+  ]) ?? [];
+
+const getExperienceFilterAncestorIdsFromNodes = (
+  nodes: ExperienceFilterNode[],
+  id: ExperienceFilterId,
+  path: ExperienceFilterId[] = []
+): ExperienceFilterId[] => {
+  for (const node of nodes) {
+    if (node.id === id) {
+      return path;
+    }
+
+    if (node.children) {
+      const result = getExperienceFilterAncestorIdsFromNodes(node.children, id, [
+        ...path,
+        node.id,
+      ]);
+
+      if (result.length > 0) {
+        return result;
+      }
+    }
+  }
+
+  return [];
+};
+
+export const getExperienceFilterAncestorIds = (id: ExperienceFilterId) =>
+  getExperienceFilterAncestorIdsFromNodes(experienceFilterColumns.flat(), id);
 
 const flattenExperienceFilters = (
   nodes: ExperienceFilterNode[]
@@ -145,10 +228,13 @@ export const experienceFilters = experienceFilterColumns.flatMap((column) =>
   flattenExperienceFilters(column)
 );
 
+export const getExperienceFilterById = (id: ExperienceFilterId) =>
+  experienceFilters.find((item) => item.id === id);
+
 export const getExperienceFilterLabel = (
   id: ExperienceFilterId,
   lang: Lang
 ) =>
-  experienceFilters.find((item) => item.id === id)?.label[lang] ??
-  experienceFilters.find((item) => item.id === id)?.label.bh ??
+  getExperienceFilterById(id)?.label[lang] ??
+  getExperienceFilterById(id)?.label.bh ??
   id;

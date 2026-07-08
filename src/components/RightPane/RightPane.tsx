@@ -11,6 +11,9 @@ import { useTranslation } from "@/components/i18n/useTranslation";
 import { categories } from "@/data/categories";
 import {
   experienceFilterColumns,
+  getExperienceFilterAncestorIds,
+  getExperienceFilterDescendantIds,
+  getExperienceFilterById,
   getExperienceFilterLabel,
   type ExperienceFilterId,
   type ExperienceFilterNode,
@@ -94,14 +97,62 @@ export default function RightPane({ title }: RightPaneProps) {
     setIsExperienceFilterOpen(false);
   };
 
-  const toggleDraftExperience = (id: ExperienceFilterId) => {
-    setDraftExperienceIds((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
-    );
+  const syncParentExperienceIds = (
+    ids: ExperienceFilterId[],
+    changedId: ExperienceFilterId
+  ) => {
+    const nextSet = new Set(ids);
+
+    getExperienceFilterAncestorIds(changedId)
+      .map(getExperienceFilterById)
+      .filter((ancestor): ancestor is ExperienceFilterNode => Boolean(ancestor))
+      .reverse()
+      .forEach((ancestor) => {
+        const descendantIds = getExperienceFilterDescendantIds(ancestor);
+        const hasAllDescendants = descendantIds.every((id) => nextSet.has(id));
+
+        if (hasAllDescendants) {
+          nextSet.add(ancestor.id);
+        } else {
+          nextSet.delete(ancestor.id);
+        }
+      });
+
+    return Array.from(nextSet);
+  };
+
+  const toggleDraftExperience = (item: ExperienceFilterNode) => {
+    const groupIds = [item.id, ...getExperienceFilterDescendantIds(item)];
+
+    setDraftExperienceIds((prev) => {
+      const shouldRemove = groupIds.every((id) => prev.includes(id));
+
+      if (shouldRemove) {
+        return syncParentExperienceIds(
+          prev.filter((id) => !groupIds.includes(id)),
+          item.id
+        );
+      }
+
+      return syncParentExperienceIds(
+        Array.from(new Set([...prev, ...groupIds])),
+        item.id
+      );
+    });
   };
 
   const removeExperienceFilter = (id: ExperienceFilterId) => {
-    setActiveExperienceIds(activeExperienceIds.filter((item) => item !== id));
+    const item = getExperienceFilterById(id);
+    const idsToRemove = item
+      ? [item.id, ...getExperienceFilterDescendantIds(item)]
+      : [id];
+
+    setActiveExperienceIds((prev) =>
+      syncParentExperienceIds(
+        prev.filter((itemId) => !idsToRemove.includes(itemId)),
+        id
+      )
+    );
   };
 
   return (
@@ -385,7 +436,7 @@ function ExperienceFilterOverlay({
   onClose,
 }: {
   draftIds: ExperienceFilterId[];
-  onToggle: (id: ExperienceFilterId) => void;
+  onToggle: (item: ExperienceFilterNode) => void;
   onClose: () => void;
 }) {
   const { lang } = useLang();
@@ -445,10 +496,11 @@ function ExperienceCheckboxGroup({
   item: ExperienceFilterNode;
   lang: Lang;
   selectedIds: ExperienceFilterId[];
-  onToggle: (id: ExperienceFilterId) => void;
+  onToggle: (item: ExperienceFilterNode) => void;
   nested?: boolean;
 }) {
   const label = item.label[lang] ?? item.label.bh ?? item.id;
+  const role = item.role?.[lang] ?? item.role?.bh;
   const isSelected = selectedIds.includes(item.id);
 
   return (
@@ -466,9 +518,10 @@ function ExperienceCheckboxGroup({
           className={styles.experienceCheckbox}
           type="checkbox"
           checked={isSelected}
-          onChange={() => onToggle(item.id)}
+          onChange={() => onToggle(item)}
         />
         <span>{label}</span>
+        {role && <span className={styles.experienceRole}>{role}</span>}
       </label>
 
       {item.children && (
