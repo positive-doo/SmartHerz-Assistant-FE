@@ -28,10 +28,10 @@ const LOGO =
   "https://cybercompany.ai/wp-content/uploads/2026/05/smart-herz-logo-final.svg";
 
 const ASSISTANT_AVATAR_BIG =
-  "https://cybercompany.ai/wp-content/uploads/2026/05/vodic-zena-herz.webp";
+  "https://cybercompany.ai/wp-content/uploads/2026/07/vodic-zena-herz-nosnja-2.webp";
 
 const ASSISTANT_AVATAR_SMALL =
-  "https://cybercompany.ai/wp-content/uploads/2026/05/herz-zenski-avatar-p.webp";
+  "https://cybercompany.ai/wp-content/uploads/2026/07/herz-zenski-avatar-pink.webp";
 
 const USER_AVATAR =
   "https://cybercompany.ai/wp-content/uploads/2026/05/user_purple.svg";
