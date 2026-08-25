@@ -2,10 +2,7 @@
 
 import {
   type KeyboardEvent,
-  type MouseEvent,
-  type RefObject,
   useMemo,
-  useRef,
   useState,
 } from "react";
 import AddIcon from "@mui/icons-material/Add";
@@ -72,14 +69,9 @@ export default function RightPane({ title }: RightPaneProps) {
   const [selectedSlugs, setSelectedSlugs] = useState<Set<RegionSlug>>(
     new Set()
   );
-  const [tooltipPos, setTooltipPos] = useState<{
-    x: number;
-    y: number;
-  } | null>(null);
   const [draftExperienceIds, setDraftExperienceIds] = useState<
     ExperienceFilterId[]
   >([]);
-  const svgContainerRef = useRef<HTMLDivElement | null>(null);
 
   const hasDateFilter = Boolean(dateRange[0] || dateRange[1]);
   const hasExperienceFilter = activeExperienceIds.length > 0;
@@ -151,7 +143,6 @@ export default function RightPane({ title }: RightPaneProps) {
 
   const closeDestinationFilter = () => {
     setHoveredSlug(null);
-    setTooltipPos(null);
     setIsDestinationFilterOpen(false);
   };
 
@@ -189,22 +180,8 @@ export default function RightPane({ title }: RightPaneProps) {
     return "idle";
   };
 
-  const updateTooltipPosition = (event: MouseEvent<SVGPathElement>) => {
-    const rect = svgContainerRef.current?.getBoundingClientRect();
-
-    if (!rect) {
-      return;
-    }
-
-    setTooltipPos({
-      x: event.clientX - rect.left,
-      y: event.clientY - rect.top,
-    });
-  };
-
   const clearRegionHover = () => {
     setHoveredSlug(null);
-    setTooltipPos(null);
   };
 
   const handleRegionKeyDown = (
@@ -546,12 +523,9 @@ export default function RightPane({ title }: RightPaneProps) {
         <DestinationFilterOverlay
           selectedSlugs={selectedSlugs}
           hoveredSlug={hoveredSlug}
-          tooltipPos={tooltipPos}
-          svgContainerRef={svgContainerRef}
           getRegionState={getRegionState}
           onHover={setHoveredSlug}
           onClearHover={clearRegionHover}
-          onTooltipMove={updateTooltipPosition}
           onToggle={toggleSelect}
           onRegionKeyDown={handleRegionKeyDown}
           onClose={closeDestinationFilter}
@@ -572,24 +546,18 @@ export default function RightPane({ title }: RightPaneProps) {
 function DestinationFilterOverlay({
   selectedSlugs,
   hoveredSlug,
-  tooltipPos,
-  svgContainerRef,
   getRegionState,
   onHover,
   onClearHover,
-  onTooltipMove,
   onToggle,
   onRegionKeyDown,
   onClose,
 }: {
   selectedSlugs: Set<RegionSlug>;
   hoveredSlug: RegionSlug | null;
-  tooltipPos: { x: number; y: number } | null;
-  svgContainerRef: RefObject<HTMLDivElement>;
   getRegionState: (slug: RegionSlug) => RegionState;
   onHover: (slug: RegionSlug) => void;
   onClearHover: () => void;
-  onTooltipMove: (event: MouseEvent<SVGPathElement>) => void;
   onToggle: (slug: RegionSlug) => void;
   onRegionKeyDown: (
     event: KeyboardEvent<SVGPathElement>,
@@ -632,7 +600,7 @@ function DestinationFilterOverlay({
         </header>
 
         <div className={styles.destinationGrid}>
-          <div className={styles.mapShell} ref={svgContainerRef}>
+          <div className={styles.mapShell}>
             <svg
               id="sh-map-svg"
               className={styles.regionMap}
@@ -653,7 +621,6 @@ function DestinationFilterOverlay({
                     d={REGION_PATHS[slug]}
                     onMouseEnter={() => onHover(slug)}
                     onMouseLeave={onClearHover}
-                    onMouseMove={onTooltipMove}
                     onFocus={() => onHover(slug)}
                     onBlur={onClearHover}
                     onClick={() => onToggle(slug)}
@@ -666,18 +633,6 @@ function DestinationFilterOverlay({
                 );
               })}
             </svg>
-
-            {hoveredSlug && tooltipPos && (
-              <div
-                className={styles.mapTooltip}
-                style={{
-                  left: tooltipPos.x + 14,
-                  top: tooltipPos.y - 14,
-                }}
-              >
-                {REGION_NAMES[hoveredSlug]}
-              </div>
-            )}
           </div>
 
           <div className={styles.regionList}>

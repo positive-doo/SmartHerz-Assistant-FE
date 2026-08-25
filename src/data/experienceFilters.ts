@@ -2,6 +2,8 @@ import type { Lang } from "@/components/i18n/LanguageProvider";
 import type { LocalizedString } from "@/models/category";
 
 export type ExperienceFilterId = string;
+export const quizPersonaCodes = ["H", "T", "A", "G", "F"] as const;
+export type QuizPersonaCode = (typeof quizPersonaCodes)[number];
 
 export type ExperienceFilterNode = {
   id: ExperienceFilterId;
@@ -238,3 +240,31 @@ export const getExperienceFilterLabel = (
   getExperienceFilterById(id)?.label[lang] ??
   getExperienceFilterById(id)?.label.bh ??
   id;
+
+const quizPersonaExperienceFilterIds: Record<
+  QuizPersonaCode,
+  ExperienceFilterId
+> = {
+  H: "culture",
+  T: "nature",
+  A: "adventure",
+  G: "gastronomy",
+  F: "family",
+};
+
+export const isQuizPersonaCode = (
+  value: string | null | undefined
+): value is QuizPersonaCode =>
+  quizPersonaCodes.includes(value as QuizPersonaCode);
+
+export const getExperienceFilterIdForQuizPersona = (
+  value: string | null | undefined
+): ExperienceFilterId | null => {
+  const normalizedValue = value?.trim().toUpperCase();
+
+  if (!isQuizPersonaCode(normalizedValue)) {
+    return null;
+  }
+
+  return quizPersonaExperienceFilterIds[normalizedValue];
+};

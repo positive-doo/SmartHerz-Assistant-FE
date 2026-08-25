@@ -18,6 +18,10 @@ import {
   type ExperienceFilterId,
 } from "@/data/experienceFilters";
 import {
+  buildQuizContextMessage,
+  type QuizContext,
+} from "@/data/quizContext";
+import {
   createEmptySuggestions,
   useAppUi,
 } from "@/state/AppUiContext";
@@ -373,7 +377,8 @@ const getPdfFilenameFromContentDisposition = (
 const buildMessageContent = (
   text: string,
   dateRange: [Dayjs | null, Dayjs | null],
-  activeExperienceIds: ExperienceFilterId[]
+  activeExperienceIds: ExperienceFilterId[],
+  quizContext: QuizContext | null
 ) => {
   const [startDate, endDate] = dateRange;
   const messageParts = [text];
@@ -399,6 +404,10 @@ const buildMessageContent = (
         .map((id) => getExperienceFilterLabel(id, "bh"))
         .join(", ")}.`
     );
+  }
+
+  if (quizContext) {
+    messageParts.push(buildQuizContextMessage(quizContext));
   }
 
   return messageParts.join("\n\n");
@@ -685,6 +694,7 @@ export default function LeftPane() {
     clearCategories,
     setSuggestionsByCategory,
     activeExperienceIds,
+    quizContext,
   } = useAppUi();
 
   useEffect(() => {
@@ -1000,7 +1010,8 @@ export default function LeftPane() {
     const messageContent = buildMessageContent(
       text,
       dateRange,
-      activeExperienceIds
+      activeExperienceIds,
+      quizContext
     );
 
     setMessages((prevMessages) => [

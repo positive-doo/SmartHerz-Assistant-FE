@@ -1,8 +1,13 @@
 "use client";
 
-import React, { createContext, useContext, useMemo, useState } from "react";
+import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { Dayjs } from "dayjs";
 import type { ExperienceFilterId } from "@/data/experienceFilters";
+import {
+  getExperienceFilterIdsForQuizContext,
+  getQuizContextFromSearchParams,
+  type QuizContext,
+} from "@/data/quizContext";
 import type { RegionSlug } from "@/data/regions";
 import type { LocalizedString } from "@/models/category";
 
@@ -27,6 +32,16 @@ export const createEmptySuggestions = (): SuggestionsByCategory => ({
   news: [],
 });
 
+const getQuizContextFromLocation = () => {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  return getQuizContextFromSearchParams(
+    new URLSearchParams(window.location.search)
+  );
+};
+
 type AppUiState = {
   hasUserStarted: boolean;
   setHasUserStarted: (v: boolean) => void;
@@ -45,6 +60,8 @@ type AppUiState = {
     React.SetStateAction<ExperienceFilterId[]>
   >;
   clearExperienceFilters: () => void;
+
+  quizContext: QuizContext | null;
 
   suggestionsByCategory: SuggestionsByCategory;
   setSuggestionsByCategory: (data: SuggestionsByCategory) => void;
@@ -65,10 +82,39 @@ export function AppUiProvider({ children }: { children: React.ReactNode }) {
   const [activeExperienceIds, setActiveExperienceIds] = useState<
     ExperienceFilterId[]
   >([]);
+  const [quizContext, setQuizContext] = useState<QuizContext | null>(null);
 
   // ✅ suggestions state (po kategoriji)
   const [suggestionsByCategory, setSuggestionsByCategory] =
     useState<SuggestionsByCategory>(createEmptySuggestions());
+
+  useEffect(() => {
+    const syncQuizContext = () => {
+      const nextQuizContext = getQuizContextFromLocation();
+
+      setQuizContext(nextQuizContext);
+
+      if (!nextQuizContext) {
+        return;
+      }
+
+      const quizExperienceFilterIds =
+        getExperienceFilterIdsForQuizContext(nextQuizContext);
+
+      setActiveExperienceIds((prevIds) =>
+        quizExperienceFilterIds.every((id) => prevIds.includes(id))
+          ? prevIds
+          : Array.from(new Set([...prevIds, ...quizExperienceFilterIds]))
+      );
+    };
+
+    syncQuizContext();
+    window.addEventListener("popstate", syncQuizContext);
+
+    return () => {
+      window.removeEventListener("popstate", syncQuizContext);
+    };
+  }, []);
 
   const toggleCategory = (id: CategoryId) => {
     setActiveCategoryIds((prev) =>
@@ -93,6 +139,7 @@ export function AppUiProvider({ children }: { children: React.ReactNode }) {
       activeExperienceIds,
       setActiveExperienceIds,
       clearExperienceFilters,
+      quizContext,
       suggestionsByCategory,
       setSuggestionsByCategory,
     }),
@@ -102,6 +149,7 @@ export function AppUiProvider({ children }: { children: React.ReactNode }) {
       dateRange,
       activeCategoryIds,
       activeExperienceIds,
+      quizContext,
       suggestionsByCategory,
     ]
   );
