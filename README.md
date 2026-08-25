@@ -130,9 +130,11 @@ Optional:
 
 ```bash
 NEXT_PUBLIC_BASE_PATH=/your-base-path
+NEXT_PUBLIC_CHAT_URL=http://localhost:8000
 ```
 
 Use this when the application needs to be served from a subpath.
+`NEXT_PUBLIC_CHAT_URL` selects the SmartHerz backend used by the chat UI.
 
 In Windows PowerShell:
 

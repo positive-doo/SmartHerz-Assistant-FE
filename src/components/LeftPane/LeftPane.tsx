@@ -58,33 +58,6 @@ type ChatMessage = {
   isFinal: boolean;
 };
 
-const extractStreamContent = (eventBlock: string): string | null => {
-  const dataLines = eventBlock
-    .split(/\r?\n/)
-    .filter((line) => line.startsWith("data:"))
-    .map((line) => line.slice(5).trimStart());
-
-  if (dataLines.length === 0) {
-    return null;
-  }
-
-  const rawData = dataLines.join("\n").trim();
-
-  if (!rawData || rawData === "[DONE]") {
-    return null;
-  }
-
-  try {
-    const payload = JSON.parse(rawData) as { content?: unknown };
-    return typeof payload.content === "string" ? payload.content : "";
-  } catch (error) {
-    console.error("Unable to parse SSE payload:", error);
-    return null;
-  }
-};
-
-const finalizeAssistantText = (text: string) => text.replace(/\u258C$/, "");
-
 const transliterateSerbianCyrillicToLatin = (text: string) => {
   const map: Record<string, string> = {
     А: "A",
@@ -690,7 +663,6 @@ export default function LeftPane() {
     string | null
   >(null);
   const messagesRef = useRef<HTMLDivElement | null>(null);
-  const streamAbortRef = useRef<AbortController | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const readAloudAbortRef = useRef<AbortController | null>(null);
   const speechLoadingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
@@ -703,7 +675,7 @@ export default function LeftPane() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordingChunksRef = useRef<Blob[]>([]);
   const shouldUploadRecordingRef = useRef(false);
-  const { t, lang } = useTranslation();
+  const { t } = useTranslation();
   const hasText = message.trim().length > 0;
   const {
     hasUserStarted,
@@ -729,7 +701,6 @@ export default function LeftPane() {
 
   useEffect(() => {
     return () => {
-      streamAbortRef.current?.abort();
       shouldUploadRecordingRef.current = false;
 
       if (recordingFrameRef.current !== null) {
@@ -813,91 +784,6 @@ export default function LeftPane() {
         item.id === messageId ? { ...item, text, isFinal } : item
       )
     );
-  };
-
-  const streamAssistantResponse = async (
-    activeSessionId: string,
-    assistantMessageId: string
-  ) => {
-    const abortController = new AbortController();
-    streamAbortRef.current?.abort();
-    streamAbortRef.current = abortController;
-
-    const response = await fetch(`${CHAT_API_BASE_URL}/chat/stream`, {
-      method: "GET",
-      headers: {
-        Accept: "text/event-stream",
-        "Cache-Control": "no-cache",
-        "Session-ID": activeSessionId,
-      },
-      credentials: "include",
-      cache: "no-store",
-      signal: abortController.signal,
-    });
-
-    if (!response.ok) {
-      throw new Error(`Chat stream failed with status ${response.status}`);
-    }
-
-    if (!response.body) {
-      throw new Error("Chat stream response body is missing.");
-    }
-
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = "";
-    let latestContent = "";
-
-    try {
-      while (true) {
-        const { done, value } = await reader.read();
-
-        if (done) {
-          break;
-        }
-
-        buffer += decoder.decode(value, { stream: true });
-        const eventBlocks = buffer.split(/\r?\n\r?\n/);
-        buffer = eventBlocks.pop() ?? "";
-
-        for (const eventBlock of eventBlocks) {
-          const content = extractStreamContent(eventBlock);
-
-          if (content === null) {
-            continue;
-          }
-
-          latestContent = content;
-          updateMessage(assistantMessageId, content, false);
-          setSuggestionsByCategory(
-            buildDemoSuggestionsFromAssistantText(content)
-          );
-        }
-      }
-
-      buffer += decoder.decode();
-
-      if (buffer.trim()) {
-        const content = extractStreamContent(buffer);
-        if (content !== null) {
-          latestContent = content;
-        }
-      }
-
-      const finalText = finalizeAssistantText(latestContent);
-
-      updateMessage(assistantMessageId, finalText, true);
-      setSuggestionsByCategory(
-        buildDemoSuggestionsFromAssistantText(finalText)
-      );
-      return finalText;
-    } finally {
-      reader.releaseLock();
-
-      if (streamAbortRef.current === abortController) {
-        streamAbortRef.current = null;
-      }
-    }
   };
 
   const getFeedbackContext = (messageId: string) => {
@@ -1109,7 +995,6 @@ export default function LeftPane() {
       return;
     }
 
-    const activeSessionId = ensureSessionId();
     const userMessageId = uuidv4();
     const assistantMessageId = uuidv4();
     const messageContent = buildMessageContent(
@@ -1145,21 +1030,14 @@ export default function LeftPane() {
     setIsAssistantResponding(true);
 
     try {
-      const response = await fetch(`${CHAT_API_BASE_URL}/chat`, {
+      const response = await fetch(`${CHAT_API_BASE_URL}/api/chat`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Session-ID": activeSessionId,
         },
         credentials: "include",
         body: JSON.stringify({
-          message: {
-            role: "user",
-            content: messageContent,
-          },
-          play_audio_response: false,
-          language: lang,
-          assistant_message_id: assistantMessageId,
+          query: messageContent,
         }),
       });
 
@@ -1167,10 +1045,13 @@ export default function LeftPane() {
         throw new Error(`Chat request failed with status ${response.status}`);
       }
 
-      const assistantText = await streamAssistantResponse(
-        activeSessionId,
-        assistantMessageId
-      );
+      const payload = (await response.json()) as { response?: unknown };
+      if (typeof payload.response !== "string") {
+        throw new Error("Chat response is missing assistant text.");
+      }
+
+      const assistantText = payload.response;
+      updateMessage(assistantMessageId, assistantText, true);
 
       setSuggestionsByCategory(
         buildDemoSuggestionsFromAssistantText(assistantText)
