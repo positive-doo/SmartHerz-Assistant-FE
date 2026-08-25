@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useMemo, useState } from "react";
 import type { Dayjs } from "dayjs";
 import type { ExperienceFilterId } from "@/data/experienceFilters";
+import type { RegionSlug } from "@/data/regions";
 import type { LocalizedString } from "@/models/category";
 
 export type CategoryId = "pages" | "events" | "special_offers" | "poi" | "news";
@@ -13,6 +14,7 @@ export type Suggestion = {
   title: LocalizedString;
   description: LocalizedString;
   imageUrl: string;
+  municipalitySlug: RegionSlug;
 };
 
 export type SuggestionsByCategory = Record<CategoryId, Suggestion[]>;
