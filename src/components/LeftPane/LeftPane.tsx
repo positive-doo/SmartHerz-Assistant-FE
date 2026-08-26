@@ -13,7 +13,9 @@ import {
   type FeedbackStatus,
 } from "../AssistantFeedback/AssistantFeedback";
 import { buildDemoSuggestionsFromAssistantText } from "@/data/demoSuggestions";
+import { detectDestinationSlugsFromText } from "@/data/destinationDetection";
 import {
+  getExperienceFilterAncestorIds,
   getExperienceFilterLabel,
   type ExperienceFilterId,
 } from "@/data/experienceFilters";
@@ -21,6 +23,10 @@ import {
   buildQuizContextMessage,
   type QuizContext,
 } from "@/data/quizContext";
+import {
+  REGION_NAMES,
+  type RegionSlug,
+} from "@/data/regions";
 import {
   createEmptySuggestions,
   useAppUi,
@@ -60,6 +66,15 @@ type ChatMessage = {
   role: "user" | "assistant";
   text: string;
   isFinal: boolean;
+};
+
+type ChatRequestFilters = {
+  dateRange?: {
+    start?: string;
+    end?: string;
+  };
+  destinations: RegionSlug[];
+  interests: ExperienceFilterId[];
 };
 
 const transliterateSerbianCyrillicToLatin = (text: string) => {
@@ -136,15 +151,62 @@ const normalizePlanText = (text: string) =>
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase();
 
+const normalizePotentialDayHeading = (line: string) =>
+  normalizePlanText(line)
+    .replace(/^#{1,6}\s*/, "")
+    .replace(/^[^a-z0-9]+/, "")
+    .trim();
+
 const getTravelPlanDayCount = (text: string) => {
   const normalizedText = normalizePlanText(text);
   const uniqueDays = new Set<number>();
+  const ordinalDayNumbers: Record<string, number> = {
+    prvi: 1,
+    drugi: 2,
+    treci: 3,
+    cetvrti: 4,
+    peti: 5,
+    sesti: 6,
+    sedmi: 7,
+    osmi: 8,
+    deveti: 9,
+    deseti: 10,
+    first: 1,
+    second: 2,
+    third: 3,
+    fourth: 4,
+    fifth: 5,
+    sixth: 6,
+    seventh: 7,
+    eighth: 8,
+    ninth: 9,
+    tenth: 10,
+  };
 
   for (const match of normalizedText.matchAll(/\b(?:dan|day)\s*(\d{1,2})\b/g)) {
     uniqueDays.add(Number(match[1]));
   }
 
-  return uniqueDays.size;
+  for (const match of normalizedText.matchAll(/\b(\d{1,2})\s*\.?\s*(?:dan|day)\b/g)) {
+    uniqueDays.add(Number(match[1]));
+  }
+
+  for (const match of normalizedText.matchAll(
+    /\b(prvi|drugi|treci|cetvrti|peti|sesti|sedmi|osmi|deveti|deseti|first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth)\s+(?:dan|day)\b/g
+  )) {
+    uniqueDays.add(ordinalDayNumbers[match[1]]);
+  }
+
+  const weekdaySectionCount = text
+    .split(/\r?\n/)
+    .map(normalizePotentialDayHeading)
+    .filter((line) =>
+      /^(ponedeljak|ponedjeljak|utorak|sreda|srijeda|cetvrtak|petak|subota|nedelja|nedjelja|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/.test(
+        line
+      )
+    ).length;
+
+  return Math.max(uniqueDays.size, weekdaySectionCount);
 };
 
 const looksLikeCompleteTravelPlan = (text: string) => {
@@ -159,14 +221,14 @@ const looksLikeCompleteTravelPlan = (text: string) => {
 
   const dayCount = getTravelPlanDayCount(text);
   const hasPlanSignal =
-    /\b(plan|itinerar|itinerary|program|agenda|schedule)\b/.test(
+    /\b(plan|itinerar|itinerary|program|agenda|schedule|raspored)\b/.test(
       normalizedText
     ) &&
     /\b(putovanja|puta|izleta|boravka|dan|dana|trip|travel|excursion|stay|day|days)\b/.test(
       normalizedText
     );
   const hasTravelStructure =
-    /\b(lokacija|location|vrijeme|vreme|time|smjestaj|smestaj|accommodation|povratak|return|rucak|lunch|vecera|dinner|pre podne|morning|popodne|afternoon|jutro|arrival|evening|local guide tips)\b/.test(
+    /\b(datum|date|lokacija|location|vrijeme|vreme|time|smjestaj|smestaj|accommodation|povratak|return|rucak|lunch|vecera|dinner|pre podne|morning|popodne|afternoon|jutro|arrival|evening|local guide tips)\b/.test(
       normalizedText
     );
 
@@ -202,7 +264,7 @@ const removePdfIcons = (text: string) =>
 const isFirstDayHeading = (line: string) => {
   const normalizedLine = normalizePlanText(cleanPlanLine(line));
 
-  return /^(dan\s*1|prvi\s+dan|day\s*1|first\s+day)\b/.test(
+  return /^(dan\s*1|1\s*\.?\s*dan|prvi\s+dan|day\s*1|1\s*\.?\s*day|first\s+day|ponedeljak|ponedjeljak|utorak|sreda|srijeda|cetvrtak|petak|subota|nedelja|nedjelja|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/.test(
     normalizedLine
   );
 };
@@ -377,6 +439,7 @@ const getPdfFilenameFromContentDisposition = (
 const buildMessageContent = (
   text: string,
   dateRange: [Dayjs | null, Dayjs | null],
+  selectedDestinationSlugs: RegionSlug[],
   activeExperienceIds: ExperienceFilterId[],
   quizContext: QuizContext | null
 ) => {
@@ -398,6 +461,14 @@ const buildMessageContent = (
     }
   }
 
+  if (selectedDestinationSlugs.length > 0) {
+    messageParts.push(
+      `Destinacije: ${selectedDestinationSlugs
+        .map((slug) => REGION_NAMES[slug])
+        .join(", ")}.`
+    );
+  }
+
   if (activeExperienceIds.length > 0) {
     messageParts.push(
       `Interesovanja: ${activeExperienceIds
@@ -411,6 +482,35 @@ const buildMessageContent = (
   }
 
   return messageParts.join("\n\n");
+};
+
+const getRequestExperienceIds = (ids: ExperienceFilterId[]) =>
+  ids.filter(
+    (id) =>
+      !getExperienceFilterAncestorIds(id).some((ancestorId) =>
+        ids.includes(ancestorId)
+      )
+  );
+
+const buildChatRequestFilters = (
+  dateRange: [Dayjs | null, Dayjs | null],
+  selectedDestinationSlugs: RegionSlug[],
+  activeExperienceIds: ExperienceFilterId[]
+): ChatRequestFilters => {
+  const [startDate, endDate] = dateRange;
+
+  return {
+    ...(startDate || endDate
+      ? {
+          dateRange: {
+            ...(startDate ? { start: startDate.format("YYYY-MM-DD") } : {}),
+            ...(endDate ? { end: endDate.format("YYYY-MM-DD") } : {}),
+          },
+        }
+      : {}),
+    destinations: selectedDestinationSlugs,
+    interests: getRequestExperienceIds(activeExperienceIds),
+  };
 };
 
 const createDefaultRecordingLevels = () =>
@@ -693,6 +793,8 @@ export default function LeftPane() {
     setIsAssistantResponding,
     clearCategories,
     setSuggestionsByCategory,
+    selectedDestinationSlugs,
+    setSelectedDestinationSlugs,
     activeExperienceIds,
     quizContext,
   } = useAppUi();
@@ -1007,12 +1109,30 @@ export default function LeftPane() {
 
     const userMessageId = uuidv4();
     const assistantMessageId = uuidv4();
+    const detectedDestinationSlugs = detectDestinationSlugsFromText(text);
+    const effectiveDestinationSlugs =
+      selectedDestinationSlugs.length > 0
+        ? selectedDestinationSlugs
+        : detectedDestinationSlugs;
     const messageContent = buildMessageContent(
       text,
       dateRange,
-      activeExperienceIds,
+      effectiveDestinationSlugs,
+      getRequestExperienceIds(activeExperienceIds),
       quizContext
     );
+    const requestFilters = buildChatRequestFilters(
+      dateRange,
+      effectiveDestinationSlugs,
+      activeExperienceIds
+    );
+
+    if (
+      selectedDestinationSlugs.length === 0 &&
+      detectedDestinationSlugs.length > 0
+    ) {
+      setSelectedDestinationSlugs(detectedDestinationSlugs);
+    }
 
     setMessages((prevMessages) => [
       ...prevMessages,
@@ -1049,6 +1169,7 @@ export default function LeftPane() {
         credentials: "include",
         body: JSON.stringify({
           query: messageContent,
+          filters: requestFilters,
         }),
       });
 

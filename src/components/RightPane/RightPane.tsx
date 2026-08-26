@@ -55,6 +55,9 @@ export default function RightPane({ title }: RightPaneProps) {
     activeCategoryIds,
     toggleCategory,
     clearCategories,
+    selectedDestinationSlugs,
+    setSelectedDestinationSlugs,
+    clearDestinationFilters,
     activeExperienceIds,
     setActiveExperienceIds,
     clearExperienceFilters,
@@ -66,16 +69,17 @@ export default function RightPane({ title }: RightPaneProps) {
   const [isExperienceFilterOpen, setIsExperienceFilterOpen] = useState(false);
   const [isDestinationFilterOpen, setIsDestinationFilterOpen] = useState(false);
   const [hoveredSlug, setHoveredSlug] = useState<RegionSlug | null>(null);
-  const [selectedSlugs, setSelectedSlugs] = useState<Set<RegionSlug>>(
-    new Set()
-  );
   const [draftExperienceIds, setDraftExperienceIds] = useState<
     ExperienceFilterId[]
   >([]);
+  const selectedSlugSet = useMemo(
+    () => new Set(selectedDestinationSlugs),
+    [selectedDestinationSlugs]
+  );
 
   const hasDateFilter = Boolean(dateRange[0] || dateRange[1]);
   const hasExperienceFilter = activeExperienceIds.length > 0;
-  const hasDestinationFilter = selectedSlugs.size > 0;
+  const hasDestinationFilter = selectedDestinationSlugs.length > 0;
   const hasAnyTopFilter =
     hasDateFilter || hasExperienceFilter || hasDestinationFilter;
 
@@ -85,7 +89,7 @@ export default function RightPane({ title }: RightPaneProps) {
   );
 
   const filteredSuggestionsByCategory = useMemo<SuggestionsByCategory>(() => {
-    if (selectedSlugs.size === 0) {
+    if (selectedDestinationSlugs.length === 0) {
       return suggestionsByCategory;
     }
 
@@ -93,11 +97,11 @@ export default function RightPane({ title }: RightPaneProps) {
       Object.entries(suggestionsByCategory).map(([categoryId, list]) => [
         categoryId,
         list.filter((destination) =>
-          selectedSlugs.has(destination.municipalitySlug)
+          selectedSlugSet.has(destination.municipalitySlug)
         ),
       ])
     ) as SuggestionsByCategory;
-  }, [selectedSlugs, suggestionsByCategory]);
+  }, [selectedDestinationSlugs.length, selectedSlugSet, suggestionsByCategory]);
 
   const availableCategories = useMemo(
     () =>
@@ -147,34 +151,21 @@ export default function RightPane({ title }: RightPaneProps) {
   };
 
   const toggleSelect = (slug: RegionSlug) => {
-    setSelectedSlugs((prev) => {
-      const next = new Set(prev);
-
-      if (next.has(slug)) {
-        next.delete(slug);
-      } else {
-        next.add(slug);
-      }
-
-      return next;
-    });
+    setSelectedDestinationSlugs((prev) =>
+      prev.includes(slug)
+        ? prev.filter((selectedSlug) => selectedSlug !== slug)
+        : [...prev, slug]
+    );
   };
 
   const removeDestinationFilter = (slug: RegionSlug) => {
-    setSelectedSlugs((prev) => {
-      const next = new Set(prev);
-      next.delete(slug);
-
-      return next;
-    });
-  };
-
-  const clearDestinationFilters = () => {
-    setSelectedSlugs(new Set());
+    setSelectedDestinationSlugs((prev) =>
+      prev.filter((selectedSlug) => selectedSlug !== slug)
+    );
   };
 
   const getRegionState = (slug: RegionSlug): RegionState => {
-    if (selectedSlugs.has(slug)) return "active";
+    if (selectedSlugSet.has(slug)) return "active";
     if (hoveredSlug === slug) return "hovered";
 
     return "idle";
@@ -303,7 +294,7 @@ export default function RightPane({ title }: RightPaneProps) {
           <div className={styles.filters}>
             <FilterPill
               label={t("destination")}
-              activeCount={selectedSlugs.size}
+              activeCount={selectedDestinationSlugs.length}
               onClick={openDestinationFilter}
             />
 
@@ -337,7 +328,7 @@ export default function RightPane({ title }: RightPaneProps) {
 
           {(hasDestinationFilter || hasExperienceFilter) && (
             <div className={styles.appliedFilters} aria-label={t("selectedFilters")}>
-              {REGION_ENTRIES.filter(([slug]) => selectedSlugs.has(slug)).map(
+              {REGION_ENTRIES.filter(([slug]) => selectedSlugSet.has(slug)).map(
                 ([slug, name]) => (
                   <button
                     key={slug}
@@ -521,7 +512,7 @@ export default function RightPane({ title }: RightPaneProps) {
 
       {isDestinationFilterOpen && (
         <DestinationFilterOverlay
-          selectedSlugs={selectedSlugs}
+          selectedSlugs={selectedSlugSet}
           hoveredSlug={hoveredSlug}
           getRegionState={getRegionState}
           onHover={setHoveredSlug}

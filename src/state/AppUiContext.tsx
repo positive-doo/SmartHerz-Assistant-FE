@@ -55,6 +55,12 @@ type AppUiState = {
   toggleCategory: (id: CategoryId) => void;
   clearCategories: () => void;
 
+  selectedDestinationSlugs: RegionSlug[];
+  setSelectedDestinationSlugs: React.Dispatch<
+    React.SetStateAction<RegionSlug[]>
+  >;
+  clearDestinationFilters: () => void;
+
   activeExperienceIds: ExperienceFilterId[];
   setActiveExperienceIds: React.Dispatch<
     React.SetStateAction<ExperienceFilterId[]>
@@ -79,6 +85,9 @@ export function AppUiProvider({ children }: { children: React.ReactNode }) {
 
   // ✅ multi-select state
   const [activeCategoryIds, setActiveCategoryIds] = useState<CategoryId[]>([]);
+  const [selectedDestinationSlugs, setSelectedDestinationSlugs] = useState<
+    RegionSlug[]
+  >([]);
   const [activeExperienceIds, setActiveExperienceIds] = useState<
     ExperienceFilterId[]
   >([]);
@@ -123,6 +132,7 @@ export function AppUiProvider({ children }: { children: React.ReactNode }) {
   };
 
   const clearCategories = () => setActiveCategoryIds([]);
+  const clearDestinationFilters = () => setSelectedDestinationSlugs([]);
   const clearExperienceFilters = () => setActiveExperienceIds([]);
 
   const value = useMemo(
@@ -136,6 +146,9 @@ export function AppUiProvider({ children }: { children: React.ReactNode }) {
       activeCategoryIds,
       toggleCategory,
       clearCategories,
+      selectedDestinationSlugs,
+      setSelectedDestinationSlugs,
+      clearDestinationFilters,
       activeExperienceIds,
       setActiveExperienceIds,
       clearExperienceFilters,
@@ -148,6 +161,7 @@ export function AppUiProvider({ children }: { children: React.ReactNode }) {
       isAssistantResponding,
       dateRange,
       activeCategoryIds,
+      selectedDestinationSlugs,
       activeExperienceIds,
       quizContext,
       suggestionsByCategory,
