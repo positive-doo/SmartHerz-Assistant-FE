@@ -1161,10 +1161,11 @@ export default function LeftPane() {
     setIsAssistantResponding(true);
 
     try {
-      const response = await fetch(`${CHAT_API_BASE_URL}/api/chat`, {
+      const response = await fetch(`${CHAT_API_BASE_URL}/api/chat/stream`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Accept: "text/event-stream",
         },
         credentials: "include",
         body: JSON.stringify({
@@ -1177,13 +1178,65 @@ export default function LeftPane() {
         throw new Error(`Chat request failed with status ${response.status}`);
       }
 
-      const payload = (await response.json()) as { response?: unknown };
-      if (typeof payload.response !== "string") {
-        throw new Error("Chat response is missing assistant text.");
+      if (!response.body) {
+        throw new Error("Chat response stream is unavailable.");
       }
 
-      const assistantText = payload.response;
-      updateMessage(assistantMessageId, assistantText, true);
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let assistantText = "";
+      let streamCompleted = false;
+
+      const processEvent = (eventBlock: string) => {
+        const data = eventBlock
+          .split("\n")
+          .filter((line) => line.startsWith("data:"))
+          .map((line) => line.slice(5).trimStart())
+          .join("\n");
+        if (!data) {
+          return;
+        }
+
+        const payload = JSON.parse(data) as {
+          content?: unknown;
+          done?: unknown;
+          error?: unknown;
+        };
+        if (typeof payload.error === "string") {
+          throw new Error(payload.error);
+        }
+        if (typeof payload.content !== "string") {
+          return;
+        }
+
+        assistantText = payload.content;
+        streamCompleted = payload.done === true;
+        updateMessage(assistantMessageId, assistantText, streamCompleted);
+      };
+
+      while (true) {
+        const { value, done } = await reader.read();
+        buffer += decoder.decode(value, { stream: !done });
+
+        let eventBoundary = buffer.indexOf("\n\n");
+        while (eventBoundary !== -1) {
+          processEvent(buffer.slice(0, eventBoundary));
+          buffer = buffer.slice(eventBoundary + 2);
+          eventBoundary = buffer.indexOf("\n\n");
+        }
+
+        if (done) {
+          break;
+        }
+      }
+
+      if (buffer.trim()) {
+        processEvent(buffer);
+      }
+      if (!assistantText || !streamCompleted) {
+        throw new Error("Chat response stream ended before completion.");
+      }
 
       setSuggestionsByCategory(
         buildDemoSuggestionsFromAssistantText(assistantText)
