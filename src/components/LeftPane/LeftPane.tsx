@@ -21,6 +21,7 @@ import {
 } from "@/data/experienceFilters";
 import {
   buildQuizContextMessage,
+  getExperienceFilterIdsForQuizContext,
   type QuizContext,
 } from "@/data/quizContext";
 import {
@@ -55,6 +56,10 @@ const SEND_ICON =
 const CHAT_ERROR_MESSAGE = "Doslo je do greske pri komunikaciji sa serverom.";
 const RECORDING_BAR_COUNT = 5;
 const WELCOME_MESSAGE_ID = "welcome-message";
+const AUTO_QUIZ_RECOMMENDATION_MESSAGE = {
+  bh: "Daj mi preporuke",
+  en: "Give me recommendations",
+};
 
 type WindowWithWebkitAudioContext = Window &
   typeof globalThis & {
@@ -513,6 +518,23 @@ const buildChatRequestFilters = (
   };
 };
 
+const getQuizContextAutoSendKey = (quizContext: QuizContext) =>
+  `${quizContext.persona}:${Object.entries(quizContext.scores)
+    .map(([personaCode, score]) => `${personaCode}-${score}`)
+    .join("|")}`;
+
+const removeQueryFromCurrentUrl = () => {
+  if (typeof window === "undefined" || !window.location.search) {
+    return;
+  }
+
+  window.history.replaceState(
+    window.history.state,
+    "",
+    `${window.location.pathname}${window.location.hash}`
+  );
+};
+
 const createDefaultRecordingLevels = () =>
   Array.from({ length: RECORDING_BAR_COUNT }, () => 5);
 
@@ -784,7 +806,8 @@ export default function LeftPane() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordingChunksRef = useRef<Blob[]>([]);
   const shouldUploadRecordingRef = useRef(false);
-  const { t } = useTranslation();
+  const autoQuizRecommendationKeyRef = useRef<string | null>(null);
+  const { t, lang } = useTranslation();
   const hasText = message.trim().length > 0;
   const {
     hasUserStarted,
@@ -1253,6 +1276,45 @@ export default function LeftPane() {
       setIsAssistantResponding(false);
     }
   };
+
+  useEffect(() => {
+    if (
+      !quizContext ||
+      hasUserStarted ||
+      isSending ||
+      message.trim().length > 0
+    ) {
+      return;
+    }
+
+    const quizExperienceFilterIds =
+      getExperienceFilterIdsForQuizContext(quizContext);
+    const areQuizFiltersReady = quizExperienceFilterIds.every((id) =>
+      activeExperienceIds.includes(id)
+    );
+
+    if (!areQuizFiltersReady) {
+      return;
+    }
+
+    const autoSendKey = getQuizContextAutoSendKey(quizContext);
+
+    if (autoQuizRecommendationKeyRef.current === autoSendKey) {
+      return;
+    }
+
+    autoQuizRecommendationKeyRef.current = autoSendKey;
+    void sendMessageText(AUTO_QUIZ_RECOMMENDATION_MESSAGE[lang]);
+    removeQueryFromCurrentUrl();
+  }, [
+    activeExperienceIds,
+    hasUserStarted,
+    isSending,
+    lang,
+    message,
+    quizContext,
+    sendMessageText,
+  ]);
 
   const handleSend = () => {
     void sendMessageText(message);

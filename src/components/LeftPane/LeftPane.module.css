@@ -199,7 +199,7 @@
   border: none;
   outline: none;
   background: transparent;
-
+  margin-right: -5px;
   font-size: 13px;
   color: #111827;
   padding: 4px 0;
