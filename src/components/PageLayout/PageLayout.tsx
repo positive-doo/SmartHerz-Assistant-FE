@@ -11,11 +11,8 @@ import styles from "./PageLayout.module.css";
 import { useAppUi } from "@/state/AppUiContext";
 
 const MOBILE_PANEL_HINT_KEY = "smartherz-mobile-panel-hint-seen";
-const MOBILE_RECOMMENDATIONS_TUTOR_KEY =
-  "smartherz-mobile-recommendations-panel-tutor-seen";
 const MOBILE_SWIPE_THRESHOLD = 24;
 const MOBILE_RECOMMENDATIONS_PREVIEW_MS = 5000;
-const MOBILE_RECOMMENDATIONS_TUTOR_MS = 7000;
 const MOBILE_BREAKPOINT_QUERY = "(max-width: 900px)";
 
 type MobilePanelPosition = "closed" | "half" | "open";
@@ -33,14 +30,10 @@ export default function PageLayout({ left, right }: PageLayoutProps) {
   const [mobilePanelPosition, setMobilePanelPosition] =
     useState<MobilePanelPosition>("closed");
   const [showMobilePanelHint, setShowMobilePanelHint] = useState(false);
-  const [showRecommendationsTutor, setShowRecommendationsTutor] =
-    useState(false);
   const touchStartYRef = useRef<number | null>(null);
   const didSwipeRef = useRef(false);
   const mobilePanelPositionRef = useRef<MobilePanelPosition>("closed");
   const recommendationsPreviewTimeoutRef = useRef<number | null>(null);
-  const recommendationsTutorTimeoutRef = useRef<number | null>(null);
-  const recommendationsTutorShownRef = useRef(false);
   const isMobilePanelVisible = mobilePanelPosition !== "closed";
   const isMobilePanelOpen = mobilePanelPosition === "open";
 
@@ -62,31 +55,21 @@ export default function PageLayout({ left, right }: PageLayoutProps) {
     }
   }, []);
 
-  const clearRecommendationsTutorTimers = useCallback(() => {
+  const clearRecommendationsPreviewTimer = useCallback(() => {
     if (recommendationsPreviewTimeoutRef.current !== null) {
       window.clearTimeout(recommendationsPreviewTimeoutRef.current);
       recommendationsPreviewTimeoutRef.current = null;
     }
-
-    if (recommendationsTutorTimeoutRef.current !== null) {
-      window.clearTimeout(recommendationsTutorTimeoutRef.current);
-      recommendationsTutorTimeoutRef.current = null;
-    }
   }, []);
 
-  const dismissRecommendationsTutor = useCallback(() => {
-    clearRecommendationsTutorTimers();
-    setShowRecommendationsTutor(false);
-  }, [clearRecommendationsTutorTimers]);
-
   const openMobilePanel = () => {
-    dismissRecommendationsTutor();
+    clearRecommendationsPreviewTimer();
     updateMobilePanelPosition("open");
     markMobilePanelHintSeen();
   };
 
   const closeMobilePanel = () => {
-    dismissRecommendationsTutor();
+    clearRecommendationsPreviewTimer();
     updateMobilePanelPosition("closed");
     markMobilePanelHintSeen();
   };
@@ -167,30 +150,6 @@ export default function PageLayout({ left, right }: PageLayoutProps) {
       }, MOBILE_RECOMMENDATIONS_PREVIEW_MS);
     }
 
-    if (!recommendationsTutorShownRef.current) {
-      try {
-        recommendationsTutorShownRef.current =
-          sessionStorage.getItem(MOBILE_RECOMMENDATIONS_TUTOR_KEY) === "true";
-      } catch {
-        // The in-memory flag keeps the tutorial one-time if storage is unavailable.
-      }
-    }
-
-    if (!recommendationsTutorShownRef.current) {
-      recommendationsTutorShownRef.current = true;
-      setShowRecommendationsTutor(true);
-
-      try {
-        sessionStorage.setItem(MOBILE_RECOMMENDATIONS_TUTOR_KEY, "true");
-      } catch {
-        // The tutorial still remains one-time for this mounted session.
-      }
-
-      recommendationsTutorTimeoutRef.current = window.setTimeout(() => {
-        setShowRecommendationsTutor(false);
-        recommendationsTutorTimeoutRef.current = null;
-      }, MOBILE_RECOMMENDATIONS_TUTOR_MS);
-    }
   }, [
     hasRecommendations,
     markMobilePanelHintSeen,
@@ -199,9 +158,9 @@ export default function PageLayout({ left, right }: PageLayoutProps) {
 
   useEffect(
     () => () => {
-      clearRecommendationsTutorTimers();
+      clearRecommendationsPreviewTimer();
     },
-    [clearRecommendationsTutorTimers]
+    [clearRecommendationsPreviewTimer]
   );
 
   return (
@@ -231,7 +190,7 @@ export default function PageLayout({ left, right }: PageLayoutProps) {
         >
           <span className={styles.mobileHandleBar} aria-hidden="true" />
 
-          {showRecommendationsTutor && (
+          {mobilePanelPosition === "half" && (
             <span
               className={`${styles.mobileHandleCue} ${styles.mobileRecommendationsCue}`}
               aria-hidden="true"
@@ -242,8 +201,7 @@ export default function PageLayout({ left, right }: PageLayoutProps) {
             </span>
           )}
 
-          {!showRecommendationsTutor &&
-            showMobilePanelHint &&
+          {showMobilePanelHint &&
             mobilePanelPosition === "closed" && (
               <span className={styles.mobileHandleCue} aria-hidden="true">
                 <svg viewBox="0 0 34 42">

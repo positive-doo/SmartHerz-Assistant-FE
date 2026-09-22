@@ -133,11 +133,13 @@
 
   .mobileHandleCue {
     position: absolute;
-    left: calc(50% + 24px);
+    left: calc(50% + 14px);
     top: 2px;
     width: 28px;
     height: 38px;
     pointer-events: none;
+    animation: mobilePanelSwipeCue 3s ease-in-out infinite;
+    will-change: transform;
   }
 
   .mobileHandleCue svg {
@@ -150,18 +152,15 @@
     stroke-width: 2;
     stroke-linecap: round;
     stroke-linejoin: round;
-    animation: mobilePanelSwipeCue 1.8s ease-in-out infinite;
+    transform: rotate(-42deg);
+    transform-origin: 50% 50%;
   }
 
   .mobileRecommendationsCue {
-    left: calc(50% + 22px);
+    left: calc(50% + 12px);
     top: 0;
     width: 32px;
     height: 42px;
-  }
-
-  .mobileRecommendationsCue svg {
-    animation: mobileRecommendationsTutorCue 2.4s ease-in-out infinite;
   }
 
   .rightContent {
@@ -181,54 +180,18 @@
 }
 
 @keyframes mobilePanelSwipeCue {
-  0% {
-    transform: translateY(5px);
-    opacity: 0;
-  }
-
-  30%,
-  70% {
-    opacity: 1;
-  }
-
+  0%,
   100% {
+    transform: translateY(4px);
+  }
+
+  50% {
     transform: translateY(-5px);
-    opacity: 0;
-  }
-}
-
-@keyframes mobileRecommendationsTutorCue {
-  0% {
-    transform: translateY(7px);
-    opacity: 0;
-  }
-
-  18% {
-    opacity: 1;
-  }
-
-  46% {
-    transform: translateY(-7px);
-    opacity: 1;
-  }
-
-  62% {
-    transform: translateY(-7px);
-    opacity: 1;
-  }
-
-  100% {
-    transform: translateY(7px);
-    opacity: 0;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .right {
     transition: none;
-  }
-
-  .mobileHandleCue svg {
-    animation: none;
   }
 }
