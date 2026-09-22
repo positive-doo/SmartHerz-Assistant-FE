@@ -186,6 +186,12 @@
   display: none;
 }
 
+@media (min-width: 1536px) and (max-width: 1600px) {
+  .popover {
+    left: -165px;
+  }
+}
+
 @media (max-width: 1400px) {
   .popover {
     left: auto;
