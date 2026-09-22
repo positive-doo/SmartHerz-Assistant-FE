@@ -241,6 +241,16 @@ export default function DateFilterPill({ label, value, onChange }: Props) {
                             </button>
                         </div>
                     )}
+
+                    <div className={styles.mobileFooter}>
+                        <button
+                            type="button"
+                            className={styles.mobileCloseButton}
+                            onClick={() => setOpen(false)}
+                        >
+                            {t("closeFilter")}
+                        </button>
+                    </div>
                 </div>
             )}
         </div>

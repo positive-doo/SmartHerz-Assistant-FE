@@ -2,6 +2,7 @@
 
 import {
   type KeyboardEvent,
+  useEffect,
   useMemo,
   useState,
 } from "react";
@@ -44,6 +45,8 @@ type RightPaneProps = {
 
 type RegionState = "active" | "hovered" | "idle";
 
+const MOBILE_VISIBLE_FILTER_COUNT = 2;
+
 export default function RightPane({ title }: RightPaneProps) {
   const { t } = useTranslation();
   const { lang, setLang } = useLang();
@@ -68,6 +71,8 @@ export default function RightPane({ title }: RightPaneProps) {
   const [showCategoryPills, setShowCategoryPills] = useState(true);
   const [isExperienceFilterOpen, setIsExperienceFilterOpen] = useState(false);
   const [isDestinationFilterOpen, setIsDestinationFilterOpen] = useState(false);
+  const [areMobileAppliedFiltersExpanded, setAreMobileAppliedFiltersExpanded] =
+    useState(false);
   const [hoveredSlug, setHoveredSlug] = useState<RegionSlug | null>(null);
   const [draftExperienceIds, setDraftExperienceIds] = useState<
     ExperienceFilterId[]
@@ -82,6 +87,19 @@ export default function RightPane({ title }: RightPaneProps) {
   const hasDestinationFilter = selectedDestinationSlugs.length > 0;
   const hasAnyTopFilter =
     hasDateFilter || hasExperienceFilter || hasDestinationFilter;
+  const appliedFilterCount =
+    selectedDestinationSlugs.length + activeExperienceIds.length;
+  const hiddenMobileFilterCount = Math.max(
+    appliedFilterCount - MOBILE_VISIBLE_FILTER_COUNT,
+    0
+  );
+  const hasHiddenMobileFilters = hiddenMobileFilterCount > 0;
+
+  useEffect(() => {
+    if (!hasHiddenMobileFilters) {
+      setAreMobileAppliedFiltersExpanded(false);
+    }
+  }, [hasHiddenMobileFilters]);
 
   const sortedCategories = useMemo(
     () => categories.slice().sort((a, b) => a.order - b.order),
@@ -246,7 +264,9 @@ export default function RightPane({ title }: RightPaneProps) {
   return (
     <div className={styles.root}>
       <div className={styles.titleRow}>
-        <h2 className={styles.title}>{title ?? t("rightTitle")}</h2>
+        <h2 id="recommendations-heading" className={styles.title}>
+          {title ?? t("rightTitle")}
+        </h2>
 
         <div className={styles.langSwitch}>
           <button
@@ -327,38 +347,72 @@ export default function RightPane({ title }: RightPaneProps) {
           </div>
 
           {(hasDestinationFilter || hasExperienceFilter) && (
-            <div className={styles.appliedFilters} aria-label={t("selectedFilters")}>
-              {REGION_ENTRIES.filter(([slug]) => selectedSlugSet.has(slug)).map(
-                ([slug, name]) => (
+            <div
+              className={`${styles.appliedFiltersFrame} ${
+                hasHiddenMobileFilters
+                  ? styles.appliedFiltersFrameHasMore
+                  : ""
+              } ${
+                areMobileAppliedFiltersExpanded
+                  ? styles.appliedFiltersFrameExpanded
+                  : ""
+              }`}
+            >
+              <div
+                className={`${styles.appliedFilters} ${
+                  areMobileAppliedFiltersExpanded
+                    ? styles.appliedFiltersExpanded
+                    : styles.appliedFiltersCollapsed
+                }`}
+                aria-label={t("selectedFilters")}
+              >
+                {REGION_ENTRIES.filter(([slug]) => selectedSlugSet.has(slug)).map(
+                  ([slug, name]) => (
+                    <button
+                      key={slug}
+                      type="button"
+                      className={styles.appliedFilterChip}
+                      onClick={() => removeDestinationFilter(slug)}
+                      aria-label={`${t("removeFilter")} ${name}`}
+                    >
+                      <span>{name}</span>
+                      <span className={styles.clearChipX} aria-hidden="true">
+                        &times;
+                      </span>
+                    </button>
+                  )
+                )}
+
+                {activeExperienceIds.map((id) => (
                   <button
-                    key={slug}
+                    key={id}
                     type="button"
                     className={styles.appliedFilterChip}
-                    onClick={() => removeDestinationFilter(slug)}
-                    aria-label={`${t("removeFilter")} ${name}`}
+                    onClick={() => removeExperienceFilter(id)}
+                    aria-label={`${t("removeFilter")} ${getExperienceFilterLabel(id, lang)}`}
                   >
-                    <span>{name}</span>
+                    <span>{getExperienceFilterLabel(id, lang)}</span>
                     <span className={styles.clearChipX} aria-hidden="true">
                       &times;
                     </span>
                   </button>
-                )
-              )}
+                ))}
 
-              {activeExperienceIds.map((id) => (
-                <button
-                  key={id}
-                  type="button"
-                  className={styles.appliedFilterChip}
-                  onClick={() => removeExperienceFilter(id)}
-                  aria-label={`${t("removeFilter")} ${getExperienceFilterLabel(id, lang)}`}
-                >
-                  <span>{getExperienceFilterLabel(id, lang)}</span>
-                  <span className={styles.clearChipX} aria-hidden="true">
-                    &times;
-                  </span>
-                </button>
-              ))}
+                {hasHiddenMobileFilters && (
+                  <button
+                    type="button"
+                    className={styles.mobileMoreFiltersChip}
+                    aria-expanded={areMobileAppliedFiltersExpanded}
+                    onClick={() =>
+                      setAreMobileAppliedFiltersExpanded((expanded) => !expanded)
+                    }
+                  >
+                    {areMobileAppliedFiltersExpanded
+                      ? t("showLessFilters")
+                      : `+${hiddenMobileFilterCount} ${t("moreFilters")}`}
+                  </button>
+                )}
+              </div>
             </div>
           )}
         </>

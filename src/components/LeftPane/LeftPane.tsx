@@ -811,6 +811,7 @@ export default function LeftPane() {
   const hasText = message.trim().length > 0;
   const {
     hasUserStarted,
+    isAssistantResponding,
     dateRange,
     setHasUserStarted,
     setIsAssistantResponding,

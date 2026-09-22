@@ -43,6 +43,7 @@
   flex: 1 1 auto;
   width: min(100%, 760px);
   min-width: 0;
+  min-height: 0;
   --chat-composer-gap: 24px;
   --messages-bottom-padding: 32px;
 }
@@ -405,7 +406,8 @@
   gap: 20px;
   width: 100%;
   padding: 0 38px var(--messages-bottom-padding) 34px;
-  max-height: calc(775px - var(--chat-composer-gap));
+  max-height: min(calc(775px - var(--chat-composer-gap)),
+        calc(100dvh - 180px));
   overflow-y: auto;
   overflow-x: hidden;
   scrollbar-gutter: stable;
@@ -482,23 +484,102 @@
 
 /* Mobile */
 @media (max-width: 900px) {
+  .root {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+  }
+
+  .header {
+    flex: 0 0 auto;
+  }
+
   .bottom {
-    position: relative;
-    padding-top: 40px;
+    position: static;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    flex: 1 1 auto;
+    min-height: 0;
+    align-items: stretch;
+    gap: 0;
+    padding: 24px 8px max(12px, env(safe-area-inset-bottom));
+  }
+
+  .avatarWrap {
+    display: none;
   }
 
   .bottomContent {
-    width: 100%;
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    width: auto;
+    min-height: 0;
+    --chat-composer-gap: 16px;
+    --messages-bottom-padding: 24px;
   }
 
   .inputBlock {
+    flex: 0 0 auto;
     margin-left: 0;
     max-width: 100%;
   }
 
+  .input {
+    min-width: 0;
+    font-size: 14px;
+  }
+
+  .input::placeholder {
+    font-size: 15px;
+  }
+
+  .voiceControls {
+    flex-basis: auto;
+  }
+
+  .waveform {
+    width: 0;
+    gap: 0;
+  }
+
+  .waveformVisible {
+    width: 35px;
+    gap: 3px;
+  }
+
+  .hint {
+    overflow-wrap: anywhere;
+  }
+
   .messages {
-    max-height: calc(46vh - var(--chat-composer-gap));
-    padding: 0 18px var(--messages-bottom-padding) 18px;
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none;
+    padding: 0 30px var(--messages-bottom-padding);
+    overscroll-behavior-y: auto;
+    scrollbar-gutter: auto;
+  }
+
+  .assistantBubbleWrap {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .assistantBubble {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .userBubbleWrap,
+  .userBubble {
+    width: auto;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 
   .assistantBubble::before,

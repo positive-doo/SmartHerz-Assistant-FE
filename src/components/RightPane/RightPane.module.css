@@ -1,4 +1,5 @@
 .root {
+  --purple-deep: #7c2dff;
   display: flex;
   flex-direction: column;
   color: #111827;
@@ -158,6 +159,14 @@
   gap: 8px;
   max-width: 795px;
   margin: 4px 0 6px;
+}
+
+.appliedFiltersFrame {
+  max-width: 795px;
+}
+
+.mobileMoreFiltersChip {
+  display: none;
 }
 
 .appliedFilterChip {
@@ -515,7 +524,7 @@
   margin-top: 10px;
   padding-right: 6px;
   overflow-y: auto;
-  max-height: 710px;
+  max-height: min(710px, calc(100dvh - 260px));
 }
 
 .scrollArea::-webkit-scrollbar {
@@ -811,6 +820,203 @@
 }
 
 @media (max-width: 900px) {
+  .root {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .title {
+    font-size: 20px;
+    line-height: 1.2;
+  }
+
+  .filters {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    max-width: 100%;
+    gap: 6px;
+    overflow: visible;
+  }
+
+  .filters > * {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .filters .pill {
+    position: relative;
+    justify-content: center;
+    width: 100%;
+    min-width: 0;
+    min-height: 42px;
+    gap: 5px;
+    padding: 7px 5px;
+    font-size: 12px;
+    line-height: 1.1;
+    text-align: center;
+  }
+
+  .filters .pill > span:not(.pillBadge) {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .filters .clearTopChip {
+    grid-column: 1 / -1;
+  }
+
+  .filters .pillBadge {
+    position: absolute;
+    z-index: 1;
+    top: -7px;
+    right: -7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 19px;
+    min-width: 19px;
+    height: 19px;
+    padding: 0;
+    border-radius: 50%;
+    background: var(--purple-deep);
+    color: #ffffff;
+    font-size: 10.5px;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .filters .pill:hover .pillBadge {
+    background: var(--purple-deep);
+    color: #ffffff;
+  }
+
+  .sectionHeaderRow {
+    display: flex;
+  }
+
+  .categoryChips {
+    display: flex;
+    max-width: 100%;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .categoryChips::-webkit-scrollbar {
+    display: none;
+  }
+
+  .categoryChip {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    scroll-snap-align: start;
+  }
+
+  .appliedFiltersFrame {
+    position: relative;
+    max-width: 100%;
+  }
+
+  .appliedFiltersFrameHasMore:not(.appliedFiltersFrameExpanded)::after {
+    content: "";
+    position: absolute;
+    z-index: 1;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 36px;
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0),
+      #ffffff
+    );
+    pointer-events: none;
+  }
+
+  .appliedFilters {
+    max-width: 100%;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    padding-right: 36px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .appliedFilters::-webkit-scrollbar {
+    display: none;
+  }
+
+  .appliedFilterChip {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    scroll-snap-align: start;
+  }
+
+  .appliedFiltersCollapsed .appliedFilterChip:nth-child(n + 3) {
+    display: none;
+  }
+
+  .appliedFiltersExpanded {
+    flex-wrap: wrap;
+    overflow-x: visible;
+    overflow-y: visible;
+    padding-right: 0;
+    scroll-snap-type: none;
+  }
+
+  .mobileMoreFiltersChip {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--purple-deep);
+    border-radius: 999px;
+    background: var(--purple-deep);
+    color: #ffffff;
+    cursor: pointer;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+    scroll-snap-align: start;
+  }
+
+  .mobileMoreFiltersChip:focus-visible {
+    outline: 2px solid rgba(109, 40, 217, 0.35);
+    outline-offset: 2px;
+  }
+
+  .scrollArea {
+    max-height: none;
+    overflow-y: visible;
+    padding-right: 0;
+  }
+
+  .card,
+  .loadingCard {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .cardBody,
+  .loadingBody {
+    min-width: 0;
+  }
+
+  .cardTitle,
+  .cardText {
+    overflow-wrap: anywhere;
+  }
+
   .destinationGrid {
     grid-template-columns: 1fr;
     gap: 18px;
