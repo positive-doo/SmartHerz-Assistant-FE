@@ -11,7 +11,7 @@ import {
 import type { RegionSlug } from "@/data/regions";
 import type { LocalizedString } from "@/models/category";
 
-export type CategoryId = "pages" | "events" | "special_offers" | "poi" | "news";
+export type CategoryId = "pages" | "events" | "thematic_routes" | "poi" | "news";
 
 export type Suggestion = {
   id: string;
@@ -19,7 +19,8 @@ export type Suggestion = {
   title: LocalizedString;
   description: LocalizedString;
   imageUrl: string;
-  municipalitySlug: RegionSlug;
+  municipalitySlug?: RegionSlug;
+  url?: string;
 };
 
 export type SuggestionsByCategory = Record<CategoryId, Suggestion[]>;
@@ -27,7 +28,7 @@ export type SuggestionsByCategory = Record<CategoryId, Suggestion[]>;
 export const createEmptySuggestions = (): SuggestionsByCategory => ({
   pages: [],
   events: [],
-  special_offers: [],
+  thematic_routes: [],
   poi: [],
   news: [],
 });

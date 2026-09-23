@@ -4,8 +4,8 @@ export const categories: Category[] = [
   { id: "pages", label: { bh: "Stranice", en: "Pages" }, order: 1 },
   { id: "poi", label: { bh: "POI", en: "POI" }, order: 2 },
   {
-    id: "special_offers",
-    label: { bh: "Specijalne ponude", en: "Special Offers" },
+    id: "thematic_routes",
+    label: { bh: "Tematske rute", en: "Thematic Routes" },
     order: 3,
   },
   { id: "events", label: { bh: "Događaji", en: "Events" }, order: 4 },

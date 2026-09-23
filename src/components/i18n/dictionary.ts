@@ -21,7 +21,7 @@ export const dictionary: Record<Lang, Record<string, string>> = {
     emptyRecording: "Snimak je prazan. Pokušajte ponovo.",
     emptyTranscript: "Nisam prepoznao govor. Pokušajte ponovo.",
     readAloudUnavailable: "Čitanje naglas nije dostupno u ovom browseru.",
-    assistantIntro: "Zdravo, ja sam tvoj virtuelni savetnik za istraživanje Istočne Hercegovine. Reci mi više o aktivnostima koje te zanimaju, koju destinaciju želiš da posetiš i kada planiraš putovanje. Daću ti savete i preporuke koje će se prikazati na desnoj strani tvog ekrana.",
+    assistantIntro: "Zdravo, ja sam vaš virtuelni savjetnik za istraživanje Istočne Hercegovine. Recite mi više o aktivnostima koje vas zanimaju, destinaciji koju želite posjetiti i o tome kada planirate putovanje. Pružit ću vam savjete i preporuke koji će biti prikazani na desnoj strani vašeg ekrana.",
     hint: "Molimo vas da ne unosite lične podatke (ime, prezime, email, broj telefona, itd.) u prozor za ćaskanje.",
     categories: "Kategorije",
     pages: "Stranice",

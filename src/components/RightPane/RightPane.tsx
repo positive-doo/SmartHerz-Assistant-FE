@@ -114,8 +114,10 @@ export default function RightPane({ title }: RightPaneProps) {
     return Object.fromEntries(
       Object.entries(suggestionsByCategory).map(([categoryId, list]) => [
         categoryId,
-        list.filter((destination) =>
-          selectedSlugSet.has(destination.municipalitySlug)
+        list.filter(
+          (suggestion) =>
+            !suggestion.municipalitySlug ||
+            selectedSlugSet.has(suggestion.municipalitySlug)
         ),
       ])
     ) as SuggestionsByCategory;
@@ -531,8 +533,8 @@ export default function RightPane({ title }: RightPaneProps) {
                       suggestion.description.bh ??
                       "";
 
-                    return (
-                      <div key={suggestion.id} className={styles.card}>
+                    const cardContent = (
+                      <>
                         <div className={styles.cardImageWrap}>
                           <img
                             className={styles.cardImage}
@@ -543,8 +545,35 @@ export default function RightPane({ title }: RightPaneProps) {
 
                         <div className={styles.cardBody}>
                           <div className={styles.cardTitle}>{cardTitle}</div>
-                          <div className={styles.cardText}>{cardDescription}</div>
+                          {cardDescription && (
+                            <div className={styles.cardText}>{cardDescription}</div>
+                          )}
                         </div>
+                      </>
+                    );
+
+                    if (suggestion.url) {
+                      return (
+                        <a
+                          key={suggestion.id}
+                          className={`${styles.card} ${styles.cardLink}`}
+                          href={suggestion.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={`${cardTitle} — ${
+                            lang === "en"
+                              ? "opens in a new tab"
+                              : "otvara se u novom tabu"
+                          }`}
+                        >
+                          {cardContent}
+                        </a>
+                      );
+                    }
+
+                    return (
+                      <div key={suggestion.id} className={styles.card}>
+                        {cardContent}
                       </div>
                     );
                   })}

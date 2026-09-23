@@ -12,7 +12,7 @@ import {
   AssistantFeedback,
   type FeedbackStatus,
 } from "../AssistantFeedback/AssistantFeedback";
-import { buildDemoSuggestionsFromAssistantText } from "@/data/demoSuggestions";
+import { buildRightSuggestions } from "@/data/rightSuggestions";
 import { detectDestinationSlugsFromText } from "@/data/destinationDetection";
 import {
   getExperienceFilterAncestorIds,
@@ -1263,7 +1263,7 @@ export default function LeftPane() {
       }
 
       setSuggestionsByCategory(
-        buildDemoSuggestionsFromAssistantText(assistantText)
+        buildRightSuggestions(assistantText, activeExperienceIds, text)
       );
     } catch (error) {
       if (error instanceof Error && error.name === "AbortError") {
