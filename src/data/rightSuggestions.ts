@@ -38,7 +38,7 @@ const suggestionCatalog: SuggestionCatalogItem[] = [
     imageUrl: getPublicAssetPath("/images/trebinje.png"),
     municipalitySlug: "trebinje",
     url: DESTINATION_URLS.trebinje,
-    keywords: ["trebinje", "trebisnjica"],
+    keywords: ["trebinje", "trebisnjica", "trebinju"],
     order: 1,
   },
   {
@@ -52,7 +52,7 @@ const suggestionCatalog: SuggestionCatalogItem[] = [
     imageUrl: getPublicAssetPath("/images/manastir-tvrdos.png"),
     municipalitySlug: "trebinje",
     url: DESTINATION_URLS.trebinje,
-    keywords: ["manastir tvrdos", "manastir tvrdoš", "tvrdos", "tvrdoš"],
+    keywords: ["manastir tvrdos", "manastir tvrdoš", "tvrdos", "tvrdoš", "trebinje"],
     order: 2,
   },
   {
@@ -65,7 +65,7 @@ const suggestionCatalog: SuggestionCatalogItem[] = [
     imageUrl: getPublicAssetPath("/images/trebisnjica.png"),
     municipalitySlug: "trebinje",
     url: DESTINATION_URLS.trebinje,
-    keywords: ["trebisnjica", "rijeka trebisnjica", "trebišnjica", "trebišnjicu", "trebišnjice"],
+    keywords: ["trebisnjica", "rijeka trebisnjica", "trebišnjica", "trebišnjicu", "trebišnjice", "trebinje"],
     order: 1,
   },
   {
@@ -91,6 +91,7 @@ const suggestionCatalog: SuggestionCatalogItem[] = [
       "vinariji",
       "anđelić",
       "vukoje",
+      "trebinje"
     ],
     order: 2,
   },
