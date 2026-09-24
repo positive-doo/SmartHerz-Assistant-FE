@@ -652,6 +652,22 @@ const renderInlineFormattedText = (
     const linkUrlEnd =
       hasOpeningParen ? text.indexOf(")", linkUrlStart + 1) : -1;
 
+    const isGoogleMapsUrl = (url: string) => {
+      try {
+        const hostname = new URL(url).hostname.toLowerCase();
+
+        return (
+          hostname === "maps.google.com" ||
+          hostname === "maps.app.goo.gl" ||
+          hostname === "goo.gl" ||
+          hostname === "google.com" ||
+          hostname.endsWith(".google.com")
+        );
+      } catch {
+        return false;
+      }
+    };
+
     if (isStreaming && linkLabel) {
       if (!hasOpeningParen || linkUrlEnd === -1) {
         formattedParts.push(
@@ -687,6 +703,7 @@ const renderInlineFormattedText = (
     }
 
     const linkUrl = text.slice(linkUrlStart + 1, linkUrlEnd).trim();
+    const showLocationIcon = isGoogleMapsUrl(linkUrl);
 
     formattedParts.push(
       <a
@@ -697,7 +714,9 @@ const renderInlineFormattedText = (
         rel="noopener noreferrer"
       >
         <span>{linkLabel}</span>
-        <LocationOnIcon className={styles.locationLinkIcon} />
+        {showLocationIcon && (
+          <LocationOnIcon className={styles.locationLinkIcon} />
+        )}
       </a>
     );
 
