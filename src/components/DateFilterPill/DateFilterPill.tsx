@@ -49,9 +49,11 @@ function MiniCalendar({
     onSelect, onHover, initialMonth,
 }: CalendarProps) {
     const today = dayjs();
+    const initialYear = initialMonth?.year ?? today.year();
+    const initialMonthIndex = initialMonth?.month ?? today.month();
     const [view, setView] = useState({
-        year: initialMonth?.year ?? today.year(),
-        month: initialMonth?.month ?? today.month(),
+        year: initialYear,
+        month: initialMonthIndex,
     });
     const { t } = useTranslation();
     const MONTH_NAMES = getMonthNames(t);
@@ -59,6 +61,10 @@ function MiniCalendar({
     const daysInMonth = getDaysInMonth(view.year, view.month);
     const rawFirst = getFirstDayOfMonth(view.year, view.month);
     const firstDay = (rawFirst + 6) % 7;
+
+    useEffect(() => {
+        setView({ year: initialYear, month: initialMonthIndex });
+    }, [initialYear, initialMonthIndex]);
 
     const prevMonth = () => {
         setView((v) => {
@@ -105,14 +111,22 @@ function MiniCalendar({
                     const isAfterMax = maxDate ? current.isAfter(maxDate, "day") : false;
                     const disabled = isPast || isBeforeMin || isAfterMax;
 
-                    // Range highlight
+                    // Range highlight, including a backwards selection preview.
                     const effectiveEnd = rangeEnd ?? hoverDate;
+                    const effectiveStart =
+                        rangeStart && effectiveEnd && effectiveEnd.isBefore(rangeStart, "day")
+                            ? effectiveEnd
+                            : rangeStart;
+                    const normalizedEnd =
+                        rangeStart && effectiveEnd && effectiveEnd.isBefore(rangeStart, "day")
+                            ? rangeStart
+                            : effectiveEnd;
                     const inRange =
-                        rangeStart && effectiveEnd &&
-                        current.isAfter(rangeStart, "day") &&
-                        current.isBefore(effectiveEnd, "day");
-                    const isRangeStart = rangeStart?.isSame(current, "day");
-                    const isRangeEnd = effectiveEnd?.isSame(current, "day");
+                        effectiveStart && normalizedEnd &&
+                        current.isAfter(effectiveStart, "day") &&
+                        current.isBefore(normalizedEnd, "day");
+                    const isRangeStart = effectiveStart?.isSame(current, "day");
+                    const isRangeEnd = normalizedEnd?.isSame(current, "day");
 
                     return (
                         <button
@@ -169,23 +183,35 @@ export default function DateFilterPill({ label, value, onChange }: Props) {
         return () => document.removeEventListener("mousedown", handler);
     }, [open]);
 
-    const handleSelect = (date: Dayjs) => {
-        // Ako nema starta ili su oba odabrana — postavi novi start
-        if (!start || (start && end)) {
-            onChange([date, null]);
-        } else {
-            // Ako je kliknuti datum pre starta, swap
-            if (date.isBefore(start, "day")) {
-                onChange([date, start]);
-            } else {
-                onChange([start, date]);
-            }
-            setOpen(false);
+    const closePicker = () => {
+        setOpen(false);
+        setHoverDate(null);
+    };
+
+    const handleStartSelect = (date: Dayjs) => {
+        if (end && !date.isAfter(end, "day")) {
+            onChange([date, end]);
+            closePicker();
+            return;
         }
+
+        onChange([date, null]);
+        setHoverDate(null);
+    };
+
+    const handleEndSelect = (date: Dayjs) => {
+        if (!start || date.isBefore(start, "day")) {
+            onChange([date, date]);
+        } else {
+            onChange([start, date]);
+        }
+
+        closePicker();
     };
 
     const today = dayjs();
-    const nextMonth = today.add(1, "month");
+    const firstVisibleMonth = start ?? today;
+    const secondVisibleMonth = end ?? start ?? today;
 
     return (
         <div className={styles.wrapper}>
@@ -212,9 +238,11 @@ export default function DateFilterPill({ label, value, onChange }: Props) {
                             hoverDate={hoverDate}
                             rangeStart={start}
                             rangeEnd={end}
-                            onSelect={handleSelect}
-                            onHover={setHoverDate}
-                            initialMonth={{ year: today.year(), month: today.month() }}
+                            onSelect={handleStartSelect}
+                            initialMonth={{
+                                year: firstVisibleMonth.year(),
+                                month: firstVisibleMonth.month(),
+                            }}
                         />
                         <div className={styles.divider} />
                         <MiniCalendar
@@ -224,9 +252,12 @@ export default function DateFilterPill({ label, value, onChange }: Props) {
                             hoverDate={hoverDate}
                             rangeStart={start}
                             rangeEnd={end}
-                            onSelect={handleSelect}
+                            onSelect={handleEndSelect}
                             onHover={setHoverDate}
-                            initialMonth={{ year: nextMonth.year(), month: nextMonth.month() }}
+                            initialMonth={{
+                                year: secondVisibleMonth.year(),
+                                month: secondVisibleMonth.month(),
+                            }}
                         />
                     </div>
 

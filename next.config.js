@@ -16,6 +16,10 @@ const nextConfig = {
         protocol: "https",
         hostname: "cybercompany.ai",
       },
+      {
+        protocol: "https",
+        hostname: "images.cybercompany.ai",
+      },
     ],
   },
 };

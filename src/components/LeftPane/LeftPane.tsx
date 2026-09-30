@@ -36,7 +36,10 @@ import {
 const CHAT_API_BASE_URL = process.env.NEXT_PUBLIC_CHAT_URL || "http://localhost:8000";
 
 const LOGO =
-  "https://cybercompany.ai/wp-content/uploads/2026/05/smart-herz-logo-final.svg";
+  "https://images.cybercompany.ai/img/smart-herz/smart-herz-default-purple.svg";
+
+const LOGO_HOVER =
+  "https://images.cybercompany.ai/img/smart-herz/smart-herz-mouseover-purple.svg";
 
 const ASSISTANT_AVATAR_BIG =
   "https://cybercompany.ai/wp-content/uploads/2026/07/vodic-zena-herz-nosnja-2.webp";
@@ -785,6 +788,7 @@ const renderFormattedText = (
 
 export default function LeftPane() {
   const [message, setMessage] = useState("");
+  const [isInputFocused, setIsInputFocused] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [sessionId, setSessionId] = useState("");
   const [isSending, setIsSending] = useState(false);
@@ -1744,7 +1748,25 @@ export default function LeftPane() {
   return (
     <div className={styles.root}>
       <div className={styles.header}>
-        <Image src={LOGO} alt="SmartHerz" width={180} height={60} priority />
+        <div className={styles.logo}>
+          <Image
+            className={`${styles.logoImage} ${styles.logoDefault}`}
+            src={LOGO}
+            alt="SmartHerz"
+            width={200}
+            height={80}
+            priority
+          />
+          <Image
+            className={`${styles.logoImage} ${styles.logoHover}`}
+            src={LOGO_HOVER}
+            alt=""
+            width={200}
+            height={80}
+            aria-hidden="true"
+            priority
+          />
+        </div>
       </div>
 
       <div className={styles.background} aria-hidden="true" />
@@ -1908,12 +1930,16 @@ export default function LeftPane() {
                     ? t("recordingPlaceholder")
                     : isTranscribing
                       ? t("transcribingAudio")
-                      : t("placeholder")
+                      : isInputFocused
+                        ? ""
+                        : t("placeholder")
                 }
                 aria-label={t("chatInputAriaLabel")}
                 value={message}
                 readOnly={isRecording || isTranscribing}
                 onChange={(e) => setMessage(e.target.value)}
+                onFocus={() => setIsInputFocused(true)}
+                onBlur={() => setIsInputFocused(false)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault();

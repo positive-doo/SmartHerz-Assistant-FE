@@ -13,6 +13,34 @@
   gap: 10px;
 }
 
+.logo {
+  position: relative;
+  width: 200px;
+  height: 80px;
+}
+
+.logoImage {
+  position: absolute;
+  inset: 0;
+  transition: opacity 200ms ease;
+}
+
+.logoDefault {
+  opacity: 1;
+}
+
+.logoHover {
+  opacity: 0;
+}
+
+.logo:hover .logoDefault {
+  opacity: 0;
+}
+
+.logo:hover .logoHover {
+  opacity: 1;
+}
+
 .subtitle {
   font-size: 12px;
   opacity: 0.75;

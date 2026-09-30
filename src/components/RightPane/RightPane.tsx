@@ -579,12 +579,17 @@ export default function RightPane({ title }: RightPaneProps) {
                   })}
 
                   {hasMore && (
-                    <button type="button" className={styles.readMoreBtn}>
+                    <a
+                      className={styles.readMoreBtn}
+                      href="https://smart-herz.modoos.rs/destinacije"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
                       <span className={styles.readMoreText}>{t("viewMore")}</span>
                       <span className={styles.readMoreIcon}>
                         <KeyboardArrowRightIcon />
                       </span>
-                    </button>
+                    </a>
                   )}
                 </div>
               </div>

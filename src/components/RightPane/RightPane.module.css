@@ -2,6 +2,8 @@
   --purple-deep: #7c2dff;
   display: flex;
   flex-direction: column;
+  height: 100%;
+  min-height: 0;
   color: #111827;
   font-family: var(--font-inter), sans-serif;
 }
@@ -491,6 +493,7 @@
   border: 2px solid #9F5FE9;
   background: transparent;
   color: #9F5FE9;
+  text-decoration: none;
 
   border-radius: 999px;
   padding: 6px 10px 6px 14px;
@@ -533,10 +536,14 @@
 }
 
 .scrollArea {
+  flex: 1 1 auto;
+  min-height: 0;
   margin-top: 10px;
   padding-right: 6px;
+  padding-bottom: 32px;
+  box-sizing: border-box;
   overflow-y: auto;
-  max-height: min(710px, calc(100dvh - 260px));
+  max-height: 710px;
 }
 
 .scrollArea::-webkit-scrollbar {
@@ -834,6 +841,7 @@
 @media (max-width: 900px) {
   .root {
     width: 100%;
+    height: auto;
     min-width: 0;
   }
 
@@ -1011,6 +1019,7 @@
     max-height: none;
     overflow-y: visible;
     padding-right: 0;
+    padding-bottom: 0;
   }
 
   .card,
