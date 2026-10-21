@@ -69,6 +69,10 @@ export default function RightPane({ title }: RightPaneProps) {
 
   const [showFilterPills, setShowFilterPills] = useState(true);
   const [showCategoryPills, setShowCategoryPills] = useState(true);
+  const [expandedCategories, setExpandedCategories] = useState<CategoryId[]>([]);
+  useEffect(() => {
+    if (isAssistantResponding) setExpandedCategories([]);
+  }, [isAssistantResponding]);
   const [isExperienceFilterOpen, setIsExperienceFilterOpen] = useState(false);
   const [isDestinationFilterOpen, setIsDestinationFilterOpen] = useState(false);
   const [areMobileAppliedFiltersExpanded, setAreMobileAppliedFiltersExpanded] =
@@ -116,8 +120,9 @@ export default function RightPane({ title }: RightPaneProps) {
         categoryId,
         list.filter(
           (suggestion) =>
-            !suggestion.municipalitySlug ||
-            selectedSlugSet.has(suggestion.municipalitySlug)
+            suggestion.municipalitySlugs?.length
+              ? suggestion.municipalitySlugs.some((slug) => selectedSlugSet.has(slug))
+              : !suggestion.municipalitySlug || selectedSlugSet.has(suggestion.municipalitySlug)
         ),
       ])
     ) as SuggestionsByCategory;
@@ -511,8 +516,9 @@ export default function RightPane({ title }: RightPaneProps) {
               return null;
             }
 
-            const preview = list.slice(0, 4);
-            const hasMore = list.length > 4;
+            const expanded = expandedCategories.includes(categoryId);
+            const preview = expanded ? list : list.slice(0, 4);
+            const hasMore = !expanded && list.length > 4;
             const categoryLabel =
               categories.find((category) => category.id === categoryId)?.label[lang] ??
               categories.find((category) => category.id === categoryId)?.label.bh ??
@@ -535,13 +541,13 @@ export default function RightPane({ title }: RightPaneProps) {
 
                     const cardContent = (
                       <>
-                        <div className={styles.cardImageWrap}>
+                        {suggestion.imageUrl && <div className={styles.cardImageWrap}>
                           <img
                             className={styles.cardImage}
                             src={suggestion.imageUrl}
                             alt={cardTitle}
                           />
-                        </div>
+                        </div>}
 
                         <div className={styles.cardBody}>
                           <div className={styles.cardTitle}>{cardTitle}</div>
@@ -578,7 +584,14 @@ export default function RightPane({ title }: RightPaneProps) {
                     );
                   })}
 
-                  {hasMore && (
+                  {hasMore && (categoryId === "poi" || categoryId === "thematic_routes") && (
+                    <button className={styles.readMoreBtn} type="button"
+                      onClick={() => setExpandedCategories((current) => [...current, categoryId])}>
+                      {lang === "en" ? `Show all (${list.length})` : `Prikaži sve (${list.length})`}
+                      <KeyboardArrowRightIcon />
+                    </button>
+                  )}
+                  {hasMore && categoryId !== "poi" && categoryId !== "thematic_routes" && (
                     <a
                       className={styles.readMoreBtn}
                       href="https://smart-herz.modoos.rs/destinacije"

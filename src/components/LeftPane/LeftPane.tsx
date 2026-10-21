@@ -12,7 +12,7 @@ import {
   AssistantFeedback,
   type FeedbackStatus,
 } from "../AssistantFeedback/AssistantFeedback";
-import { buildRightSuggestions } from "@/data/rightSuggestions";
+import { buildRightSuggestions, type CsvRecommendation } from "@/data/rightSuggestions";
 import { detectDestinationSlugsFromText } from "@/data/destinationDetection";
 import {
   getExperienceFilterAncestorIds,
@@ -1234,6 +1234,7 @@ export default function LeftPane() {
       let buffer = "";
       let assistantText = "";
       let streamCompleted = false;
+      let csvRecommendations: CsvRecommendation[] | undefined;
 
       const processEvent = (eventBlock: string) => {
         const data = eventBlock
@@ -1249,6 +1250,7 @@ export default function LeftPane() {
           content?: unknown;
           done?: unknown;
           error?: unknown;
+          recommendations?: unknown;
         };
         if (typeof payload.error === "string") {
           throw new Error(payload.error);
@@ -1259,6 +1261,15 @@ export default function LeftPane() {
 
         assistantText = payload.content;
         streamCompleted = payload.done === true;
+        if (streamCompleted && Array.isArray(payload.recommendations)) {
+          csvRecommendations = payload.recommendations.filter(
+            (record): record is CsvRecommendation =>
+              record !== null && typeof record === "object" &&
+              typeof record.id === "string" && typeof record.name === "string" &&
+              (record.category === "poi" || record.category === "thematic_routes") &&
+              (record.municipality === undefined || typeof record.municipality === "string")
+          );
+        }
         updateMessage(assistantMessageId, assistantText, streamCompleted);
       };
 
@@ -1286,7 +1297,7 @@ export default function LeftPane() {
       }
 
       setSuggestionsByCategory(
-        buildRightSuggestions(assistantText, activeExperienceIds, text)
+        buildRightSuggestions(assistantText, activeExperienceIds, text, csvRecommendations)
       );
     } catch (error) {
       if (error instanceof Error && error.name === "AbortError") {

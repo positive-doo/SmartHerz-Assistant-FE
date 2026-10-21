@@ -18,8 +18,9 @@ export type Suggestion = {
   categoryId: CategoryId;
   title: LocalizedString;
   description: LocalizedString;
-  imageUrl: string;
+  imageUrl?: string;
   municipalitySlug?: RegionSlug;
+  municipalitySlugs?: RegionSlug[];
   url?: string;
 };
 

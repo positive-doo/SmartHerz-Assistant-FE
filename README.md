@@ -2,6 +2,14 @@
 
 Frontend foundation for the SmartHerz Assistant application.
 
+The chat can now receive source-backed POI and thematic-route cards in the
+final streaming response. New CSV POIs display their name and municipality;
+images, descriptions and links are optional. Existing matching card content
+is reused without duplicate POI/page cards. Municipality filters support
+POIs shared by two municipalities, and the user can expand all matching POIs.
+Older backend responses without card metadata retain the existing card flow.
+No integration API key is embedded in the frontend.
+
 This project is built with the `Next.js` App Router and currently serves as the initial UI skeleton for further assistant development. The goal of this codebase is to provide a stable frontend setup, a basic layout system, a UI component library, and a static build/deployment flow.
 
 ## Table of Contents

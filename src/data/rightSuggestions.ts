@@ -7,6 +7,7 @@ import type {
 import { createEmptySuggestions } from "@/state/AppUiContext";
 import { getPublicAssetPath } from "@/utils/getPublicAssetPath";
 import type { ExperienceFilterId } from "@/data/experienceFilters";
+import { REGION_ENTRIES } from "@/data/regions";
 
 type SuggestionCatalogItem = Suggestion & {
   keywords: string[];
@@ -441,10 +442,18 @@ const normalizeText = (value: string) =>
 const sortByOrder = (a: SuggestionCatalogItem, b: SuggestionCatalogItem) =>
   a.order - b.order;
 
+export type CsvRecommendation = {
+  id: string;
+  name: string;
+  category: "poi" | "thematic_routes";
+  municipality?: string;
+};
+
 export const buildRightSuggestions = (
   assistantText: string,
   activeExperienceIds: ExperienceFilterId[] = [],
-  userText = ""
+  userText = "",
+  csvRecommendations?: CsvRecommendation[]
 ): SuggestionsByCategory => {
   const suggestions = createEmptySuggestions();
   const normalizedText = normalizeText(`${userText}\n${assistantText}`);
@@ -470,6 +479,40 @@ export const buildRightSuggestions = (
   for (const categoryId of featuredCategoryIds) {
     suggestions[categoryId] = matchedItems.filter(
       (item) => item.categoryId === categoryId
+    );
+  }
+
+  if (csvRecommendations !== undefined) {
+    // CSV cards are selected by the backend from the source used for this answer.
+    // Keep existing descriptions/images where that exact place is already known.
+    for (const categoryId of ["poi", "thematic_routes"] as const) {
+      suggestions[categoryId] = csvRecommendations
+        .filter((record) => record.category === categoryId)
+        .map((record) => {
+          const existing = suggestionCatalog.find(
+            (item) => (item.categoryId === categoryId || (categoryId === "poi" && item.categoryId === "pages")) &&
+              Object.values(item.title).some(
+                (name) => name && normalizeText(name) === normalizeText(record.name)
+              )
+          );
+          const municipalities = (record.municipality || "").split(",").map((name) => normalizeText(name.trim()));
+          const municipalitySlugs = REGION_ENTRIES
+            .filter(([, name]) => municipalities.includes(normalizeText(name)))
+            .map(([slug]) => slug);
+          return {
+            ...existing,
+            id: record.id,
+            categoryId,
+            title: existing?.title ?? withFallback(record.name, record.name),
+            description: existing?.description ?? withFallback(record.municipality || "", record.municipality || ""),
+            municipalitySlug: municipalitySlugs[0] ?? existing?.municipalitySlug,
+            municipalitySlugs,
+          };
+        });
+    }
+    suggestions.pages = suggestions.pages.filter((page) =>
+      !csvRecommendations.some((record) => record.category === "poi" &&
+        Object.values(page.title).some((name) => name && normalizeText(name) === normalizeText(record.name)))
     );
   }
 
