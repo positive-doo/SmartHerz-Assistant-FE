@@ -22,6 +22,8 @@
   overflow: hidden;
   padding: 30px 10px;
   box-sizing: border-box;
+  background-color: rgba(251, 250, 245, 0.5);
+  border-left: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .rightContent {
@@ -65,7 +67,6 @@
     overflow: hidden;
     padding: 0;
     border-radius: 14px 14px 0 0;
-    background: #ffffff;
     box-shadow: 0 -6px 24px rgba(17, 24, 39, 0.12);
     transition:
       height 900ms cubic-bezier(0.22, 1, 0.36, 1),
@@ -94,7 +95,7 @@
     padding: 0;
     border: 0;
     border-radius: inherit;
-    background: #ffffff;
+    background: transparent;
     color: #9F5FE9;
     cursor: pointer;
     touch-action: none;
@@ -171,7 +172,7 @@
     overflow-y: auto;
     overscroll-behavior: contain;
     padding: 10px 16px max(32px, env(safe-area-inset-bottom));
-    background: #ffffff;
+    background: transparent;
   }
 
   .rightContentReady {

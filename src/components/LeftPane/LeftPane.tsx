@@ -1759,7 +1759,12 @@ export default function LeftPane() {
   return (
     <div className={styles.root}>
       <div className={styles.header}>
-        <div className={styles.logo}>
+        <a
+          className={styles.logo}
+          href="https://smartherz.info"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           <Image
             className={`${styles.logoImage} ${styles.logoDefault}`}
             src={LOGO}
@@ -1777,7 +1782,7 @@ export default function LeftPane() {
             aria-hidden="true"
             priority
           />
-        </div>
+        </a>
       </div>
 
       <div className={styles.background} aria-hidden="true" />
