@@ -21,10 +21,10 @@ const withFallback = (bh: string, en: string): LocalizedString => ({
 });
 
 const DESTINATION_URLS = {
-  trebinje: "https://smart-herz.modoos.rs/destinacije/trebinje",
-  bileca: "https://smart-herz.modoos.rs/destinacije/bileca",
-  kalinovik: "https://smart-herz.modoos.rs/destinacije/kalinovik",
-  berkovici: "https://smart-herz.modoos.rs/destinacije/berkovici",
+  trebinje: "https://smartherz.info/destinacije/trebinje",
+  bileca: "https://smartherz.info/destinacije/bileca",
+  kalinovik: "https://smartherz.info/destinacije/kalinovik",
+  berkovici: "https://smartherz.info/destinacije/berkovici",
 } as const;
 
 const suggestionCatalog: SuggestionCatalogItem[] = [
@@ -368,7 +368,7 @@ const suggestionCatalog: SuggestionCatalogItem[] = [
       "The Taste Trail of Eastern Herzegovina leads from the vineyards and city market of Trebinje to the mountain landscapes of Kalinovik, revealing the authentic flavors, aromas, and traditions of the region.\n\nAlong the route, wineries, local products, monastic heritage, and mountain scenery come together to create a journey through the many faces of Herzegovina. Homemade cheese, kaymak, honey, wine, and traditional cuisine connect places and people in a unique gastronomic experience.\n\nThis route is for travelers who want to discover Herzegovina through its flavors, landscapes, and hospitality."
     ),
     imageUrl: getPublicAssetPath("/images/routes/ruta-staza-ukusa.png"),
-    url: "https://smart-herz.modoos.rs/tematske-rute/staza-ukusa-istocna-hercegovina",
+    url: "https://smartherz.info/tematske-rute/staza-ukusa-istocna-hercegovina",
     keywords: [
       "staza ukusa",
       "stazu ukusa",
@@ -392,7 +392,7 @@ const suggestionCatalog: SuggestionCatalogItem[] = [
       "The Stories Carved in Stone route explores the cultural and historical heritage of Eastern Herzegovina, connecting stećci, medieval towns, fortresses, monasteries, churches, bridges, and traces of different civilizations.\n\nFrom Trebinje and Bileća, through Ljubinje and Berkovići, to Nevesinje and Gacko, each site reveals a new chapter in the region’s past. Medieval stećak necropolises hold a special place along the route, including sites protected by UNESCO.\n\nThis route is for travelers who want to discover Herzegovina through its stone monuments, historical landscapes, and stories preserved for centuries in the places where they originated."
     ),
     imageUrl: getPublicAssetPath("/images/routes/ruta-price-uklesane-u-kamenu.png"),
-    url: "https://smart-herz.modoos.rs/tematske-rute/price-uklesane-u-kamenu/",
+    url: "https://smartherz.info/tematske-rute/price-uklesane-u-kamenu/",
     keywords: [
       "price uklesane u kamenu",
       "priče uklesane u kamenu",
@@ -416,7 +416,7 @@ const suggestionCatalog: SuggestionCatalogItem[] = [
       "The Between the Mountains and the Sky route reveals the wild, mountainous side of Eastern Herzegovina through glacial lakes, high ridges, springs, caves, and vast mountain landscapes.\n\nFrom Zelengora and its famous “mountain eyes” to the highlands of Kalinovik and Gacko, the route offers numerous opportunities for hiking, trekking, and exploring nearly untouched nature. Different sections can be adapted to visitors’ experience and fitness levels, from shorter excursions to demanding full-day tours.\n\nThis route is for lovers of active holidays, mountain solitude, and landscapes best discovered on foot."
     ),
     imageUrl: getPublicAssetPath("/images/routes/ruta-izmedju-planina-i-neba.png"),
-    url: "https://smart-herz.modoos.rs/tematske-rute/izmedu-planina-i-neba/",
+    url: "https://smartherz.info/tematske-rute/izmedu-planina-i-neba/",
     keywords: [
       "izmedju planina i neba",
       "između planina i neba",

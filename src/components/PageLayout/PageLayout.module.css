@@ -4,7 +4,15 @@
   display: grid;
   grid-template-columns: 6fr 4fr;
   box-sizing: border-box;
-  background-image: url("https://cybercompany.ai/wp-content/uploads/2026/05/pozadina-herz-w.webp");
+  background-color: #fbfaf5;
+  background-image:
+    linear-gradient(
+      90deg,
+      rgba(244, 240, 231, 0.50) 0%,
+      rgba(244, 240, 231, 0.65) 60%,
+      rgba(244, 240, 231, 0.85) 100%
+    ),
+    url("../../../public/background-image.png");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
