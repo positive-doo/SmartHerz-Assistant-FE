@@ -67,6 +67,7 @@
     overflow: hidden;
     padding: 0;
     border-radius: 14px 14px 0 0;
+    background-color: #fbfaf5;
     box-shadow: 0 -6px 24px rgba(17, 24, 39, 0.12);
     transition:
       height 900ms cubic-bezier(0.22, 1, 0.36, 1),

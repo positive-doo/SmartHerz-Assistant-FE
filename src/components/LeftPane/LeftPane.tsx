@@ -243,7 +243,9 @@ const looksLikeCompleteTravelPlan = (text: string) => {
   return (
     dayCount >= 3 ||
     (dayCount >= 2 && (hasPlanSignal || hasTravelStructure)) ||
-    (dayCount >= 1 && hasPlanSignal && hasTravelStructure)
+    (dayCount >= 1 &&
+      hasTravelStructure &&
+      (hasPlanSignal || text.split(/\r?\n/).some(isFirstDayHeading)))
   );
 };
 
@@ -277,63 +279,52 @@ const isFirstDayHeading = (line: string) => {
   );
 };
 
-const isGuideTipsHeading = (line: string) => {
-  const normalizedLine = normalizePlanText(cleanPlanLine(line));
-
-  return (
-    (/male\s+cake/.test(normalizedLine) &&
-      /(vodica|lokalnog\s+vodica)/.test(normalizedLine)) ||
-    /local\s+guide\s+tips/.test(normalizedLine)
-  );
-};
-
 const isTrailingPlanSuggestion = (line: string) => {
   const normalizedLine = normalizePlanText(cleanPlanLine(line));
+  const hasAssistantOffer =
+    /\bmogu\s+(?:(?:da|ti|vam|i|jos|takodje)\s+)*(?:napravim|napraviti|ponudim|ponuditi|pripremim|pripremiti|sastavim|sastaviti|predlozim|predloziti|dodam|dodati|izradim|izraditi|prilagodim|prilagoditi|posaljem|poslati)\b/.test(
+      normalizedLine
+    );
 
-  return /^(ako\s+(zelis|zelite)|zelis\s+li|zelite\s+li|mogu\s+|ukoliko\s+(zelis|zelite)|if\s+you\s+(want|would\s+like)|would\s+you\s+like|i\s+can\s+)\b/.test(
-    normalizedLine
+  return (
+    (hasAssistantOffer &&
+      /^(mogu\b|(ako|ukoliko)\s+(zelis|zelite)\b)/.test(normalizedLine)) ||
+    /^(zelis|zelite)\s+li\s+da\s+(ti|vam)\b/.test(normalizedLine) ||
+    /^(i\s+can\b|would\s+you\s+like\s+me\s+to\b|if\s+you\s+(want|would\s+like)\b.*\bi\s+can\b)/.test(
+      normalizedLine
+    )
   );
 };
 
-const buildPlanPdfMarkdown = (text: string) => {
+const stripPlanFollowUpSuggestions = (text: string) => {
   const lines = text.trim().split(/\r?\n/);
   const firstDayIndex = lines.findIndex(isFirstDayHeading);
 
-  if (firstDayIndex === -1) {
-    return removePdfIcons(text);
+  if (firstDayIndex === -1 && !looksLikeCompleteTravelPlan(text)) {
+    return text;
   }
 
-  const guideTipsIndex = lines.findIndex(
-    (line, index) => index >= firstDayIndex && isGuideTipsHeading(line)
+  const suggestionIndex = lines.findIndex(
+    (line, index) => index > firstDayIndex && isTrailingPlanSuggestion(line)
   );
 
-  if (guideTipsIndex === -1) {
-    return removePdfIcons(lines.slice(firstDayIndex).join("\n"));
+  if (suggestionIndex === -1) {
+    return text;
   }
 
-  let endIndex = lines.length;
-  let hasGuideTipListStarted = false;
+  return lines
+    .slice(0, suggestionIndex)
+    .join("\n")
+    .trimEnd()
+    .replace(/(?:\n\s*[-*_]{3,})+$/, "")
+    .trimEnd();
+};
 
-  for (let index = guideTipsIndex + 1; index < lines.length; index += 1) {
-    const line = lines[index];
-    const trimmedLine = line.trim();
+const buildPlanPdfMarkdown = (text: string) => {
+  const lines = stripPlanFollowUpSuggestions(text).trim().split(/\r?\n/);
+  const firstDayIndex = lines.findIndex(isFirstDayHeading);
 
-    if (!trimmedLine) {
-      continue;
-    }
-
-    if (/^([-*]|\d+\.)\s+/.test(trimmedLine)) {
-      hasGuideTipListStarted = true;
-      continue;
-    }
-
-    if (hasGuideTipListStarted || isTrailingPlanSuggestion(line)) {
-      endIndex = index;
-      break;
-    }
-  }
-
-  return removePdfIcons(lines.slice(firstDayIndex, endIndex).join("\n"));
+  return removePdfIcons(lines.slice(Math.max(firstDayIndex, 0)).join("\n"));
 };
 
 const getPlanHeading = (text: string) => {
@@ -938,9 +929,11 @@ export default function LeftPane() {
   };
 
   const updateMessage = (messageId: string, text: string, isFinal: boolean) => {
+    const messageText = stripPlanFollowUpSuggestions(text);
+
     setMessages((prevMessages) =>
       prevMessages.map((item) =>
-        item.id === messageId ? { ...item, text, isFinal } : item
+        item.id === messageId ? { ...item, text: messageText, isFinal } : item
       )
     );
   };
