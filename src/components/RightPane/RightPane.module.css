@@ -17,7 +17,7 @@
 
 .title {
   margin: 0 0 8px;
-  font-size: 17px;
+  font-size: 24px;
   font-weight: 700;
   line-height: 1;
   font-family: var(--font-inter), sans-serif;
@@ -36,6 +36,7 @@
 .langSwitch {
   display: inline-flex;
   gap: 8px;
+  margin-bottom: 8px;
 }
 
 .langBtn {
@@ -497,7 +498,6 @@
 
   border-radius: 999px;
   padding: 6px 10px 6px 14px;
-
   font-weight: 800;
   font-size: 12px;
   letter-spacing: 0.06em;
