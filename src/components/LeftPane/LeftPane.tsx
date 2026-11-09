@@ -42,7 +42,7 @@ const LOGO_HOVER =
   "https://images.cybercompany.ai/img/smart-herz/smart-herz-mouseover-purple.svg";
 
 const ASSISTANT_AVATAR_BIG =
-  "https://cybercompany.ai/wp-content/uploads/2026/07/vodic-zena-herz-nosnja-2.webp";
+  "https://images.cybercompany.ai/img/smart-herz/vodic-zena-herz-nosnja-3.webp";
 
 const ASSISTANT_AVATAR_SMALL =
   "https://cybercompany.ai/wp-content/uploads/2026/07/herz-zenski-avatar-pink.webp";
