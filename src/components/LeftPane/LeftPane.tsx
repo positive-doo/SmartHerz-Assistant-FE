@@ -7,7 +7,6 @@ import type { Dayjs } from "dayjs";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import StopRoundedIcon from "@mui/icons-material/StopRounded";
 import styles from "./LeftPane.module.css";
-import { ChatLocationMap, parseChatMapLocation, type ChatMapLocation } from "./ChatLocationMap";
 import { useTranslation } from "../i18n/useTranslation";
 import {
   AssistantFeedback,
@@ -75,7 +74,6 @@ type ChatMessage = {
   role: "user" | "assistant";
   text: string;
   isFinal: boolean;
-  mapLocation?: ChatMapLocation;
 };
 
 type ChatRequestFilters = {
@@ -930,17 +928,12 @@ export default function LeftPane() {
     return newSessionId;
   };
 
-  const updateMessage = (
-    messageId: string,
-    text: string,
-    isFinal: boolean,
-    mapLocation?: ChatMapLocation,
-  ) => {
+  const updateMessage = (messageId: string, text: string, isFinal: boolean) => {
     const messageText = stripPlanFollowUpSuggestions(text);
 
     setMessages((prevMessages) =>
       prevMessages.map((item) =>
-        item.id === messageId ? { ...item, text: messageText, isFinal, mapLocation } : item
+        item.id === messageId ? { ...item, text: messageText, isFinal } : item
       )
     );
   };
@@ -1251,7 +1244,6 @@ export default function LeftPane() {
           done?: unknown;
           error?: unknown;
           recommendations?: unknown;
-          map_location?: unknown;
         };
         if (typeof payload.error === "string") {
           throw new Error(payload.error);
@@ -1271,12 +1263,7 @@ export default function LeftPane() {
               (record.municipality === undefined || typeof record.municipality === "string")
           );
         }
-        updateMessage(
-          assistantMessageId,
-          assistantText,
-          streamCompleted,
-          streamCompleted ? parseChatMapLocation(payload.map_location) : undefined,
-        );
+        updateMessage(assistantMessageId, assistantText, streamCompleted);
       };
 
       while (true) {
@@ -1870,14 +1857,6 @@ export default function LeftPane() {
                             <span className={styles.typingDot} />
                             <span className={styles.typingDot} />
                           </span>
-                        )}
-
-                        {chatMessage.isFinal && chatMessage.mapLocation && (
-                          <ChatLocationMap
-                            location={chatMessage.mapLocation}
-                            title={`${t("chatMapTitle")} – ${chatMessage.mapLocation.name}`}
-                            linkLabel={t("chatMapOpenLink")}
-                          />
                         )}
 
                         {chatMessage.isFinal &&
