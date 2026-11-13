@@ -122,6 +122,19 @@
   word-break: break-word;
 }
 
+.chatLocationMap {
+  margin-top: 12px;
+}
+
+.chatLocationMapFrame {
+  display: block;
+  width: 100%;
+  height: 230px;
+  margin-bottom: 6px;
+  border: 0;
+  border-radius: 8px;
+}
+
 .formattedLine {
   display: block;
   font-family: inherit;
