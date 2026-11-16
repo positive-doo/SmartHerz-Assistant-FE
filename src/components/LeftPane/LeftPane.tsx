@@ -7,12 +7,15 @@ import type { Dayjs } from "dayjs";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import StopRoundedIcon from "@mui/icons-material/StopRounded";
 import styles from "./LeftPane.module.css";
+import { FoodImages } from "./FoodImages";
 import { useTranslation } from "../i18n/useTranslation";
 import {
   AssistantFeedback,
   type FeedbackStatus,
 } from "../AssistantFeedback/AssistantFeedback";
-import { buildRightSuggestions, type CsvRecommendation } from "@/data/rightSuggestions";
+import { buildRightSuggestions } from "@/data/rightSuggestions";
+import { normalizeChatWhitespace } from "@/utils/normalizeChatWhitespace";
+import { isFoodQuestion } from "@/utils/findFoodImages";
 import { detectDestinationSlugsFromText } from "@/data/destinationDetection";
 import {
   getExperienceFilterAncestorIds,
@@ -74,6 +77,7 @@ type ChatMessage = {
   role: "user" | "assistant";
   text: string;
   isFinal: boolean;
+  showFoodImages?: boolean;
 };
 
 type ChatRequestFilters = {
@@ -1150,10 +1154,12 @@ export default function LeftPane() {
     const userMessageId = uuidv4();
     const assistantMessageId = uuidv4();
     const detectedDestinationSlugs = detectDestinationSlugsFromText(text);
+    // A destination in the latest question replaces the previous selection.
+    // Follow-up questions without a place keep the current destination context.
     const effectiveDestinationSlugs =
-      selectedDestinationSlugs.length > 0
-        ? selectedDestinationSlugs
-        : detectedDestinationSlugs;
+      detectedDestinationSlugs.length > 0
+        ? detectedDestinationSlugs
+        : selectedDestinationSlugs;
     const messageContent = buildMessageContent(
       text,
       dateRange,
@@ -1167,10 +1173,7 @@ export default function LeftPane() {
       activeExperienceIds
     );
 
-    if (
-      selectedDestinationSlugs.length === 0 &&
-      detectedDestinationSlugs.length > 0
-    ) {
+    if (detectedDestinationSlugs.length > 0) {
       setSelectedDestinationSlugs(detectedDestinationSlugs);
     }
 
@@ -1182,6 +1185,7 @@ export default function LeftPane() {
         role: "assistant",
         text: "",
         isFinal: false,
+        showFoodImages: isFoodQuestion(text),
       },
     ]);
     setMessage("");
@@ -1227,7 +1231,6 @@ export default function LeftPane() {
       let buffer = "";
       let assistantText = "";
       let streamCompleted = false;
-      let csvRecommendations: CsvRecommendation[] | undefined;
 
       const processEvent = (eventBlock: string) => {
         const data = eventBlock
@@ -1243,7 +1246,6 @@ export default function LeftPane() {
           content?: unknown;
           done?: unknown;
           error?: unknown;
-          recommendations?: unknown;
         };
         if (typeof payload.error === "string") {
           throw new Error(payload.error);
@@ -1252,17 +1254,8 @@ export default function LeftPane() {
           return;
         }
 
-        assistantText = payload.content;
+        assistantText = normalizeChatWhitespace(payload.content);
         streamCompleted = payload.done === true;
-        if (streamCompleted && Array.isArray(payload.recommendations)) {
-          csvRecommendations = payload.recommendations.filter(
-            (record): record is CsvRecommendation =>
-              record !== null && typeof record === "object" &&
-              typeof record.id === "string" && typeof record.name === "string" &&
-              (record.category === "poi" || record.category === "thematic_routes") &&
-              (record.municipality === undefined || typeof record.municipality === "string")
-          );
-        }
         updateMessage(assistantMessageId, assistantText, streamCompleted);
       };
 
@@ -1290,7 +1283,7 @@ export default function LeftPane() {
       }
 
       setSuggestionsByCategory(
-        buildRightSuggestions(assistantText, activeExperienceIds, text, csvRecommendations)
+        buildRightSuggestions(assistantText, activeExperienceIds, text)
       );
     } catch (error) {
       if (error instanceof Error && error.name === "AbortError") {
@@ -1857,6 +1850,10 @@ export default function LeftPane() {
                             <span className={styles.typingDot} />
                             <span className={styles.typingDot} />
                           </span>
+                        )}
+
+                        {chatMessage.isFinal && chatMessage.showFoodImages && (
+                          <FoodImages text={chatMessage.text} />
                         )}
 
                         {chatMessage.isFinal &&

@@ -7,11 +7,13 @@ import type {
 import { createEmptySuggestions } from "@/state/AppUiContext";
 import { getPublicAssetPath } from "@/utils/getPublicAssetPath";
 import type { ExperienceFilterId } from "@/data/experienceFilters";
-import { REGION_ENTRIES } from "@/data/regions";
+import { REGION_ENTRIES, type RegionSlug } from "@/data/regions";
+import poiRecords from "@/data/poiCatalog.json";
 
 type SuggestionCatalogItem = Suggestion & {
   keywords: string[];
   interestIds?: ExperienceFilterId[];
+  routeIds?: string[];
   order: number;
 };
 
@@ -20,14 +22,18 @@ const withFallback = (bh: string, en: string): LocalizedString => ({
   en,
 });
 
-const DESTINATION_URLS = {
+const DESTINATION_URLS: Record<RegionSlug, string> = {
   trebinje: "https://smartherz.info/destinacije/trebinje",
   bileca: "https://smartherz.info/destinacije/bileca",
   kalinovik: "https://smartherz.info/destinacije/kalinovik",
   berkovici: "https://smartherz.info/destinacije/berkovici",
-} as const;
+  nevesinje: "https://smartherz.info/destinacije/nevesinje",
+  gacko: "https://smartherz.info/destinacije/gacko",
+  ljubinje: "https://smartherz.info/destinacije/ljubinje",
+  "istocni-mostar": "https://smartherz.info/destinacije/istocni-mostar",
+};
 
-const suggestionCatalog: SuggestionCatalogItem[] = [
+const featuredCatalog: SuggestionCatalogItem[] = [
   {
     id: "page-trebinje",
     categoryId: "pages",
@@ -41,78 +47,6 @@ const suggestionCatalog: SuggestionCatalogItem[] = [
     url: DESTINATION_URLS.trebinje,
     keywords: ["trebinje", "trebisnjica", "trebinju"],
     order: 1,
-  },
-  {
-    id: "page-monasteries",
-    categoryId: "pages",
-    title: withFallback("Manastir Tvrdoš", "Tvrdoš Monastery"),
-    description: withFallback(
-      "Manastir Tvrdoš je najstariji živi manastir u današnjoj Hercegovini. Nalazi se na oko 270 m nadmorske visine, a njegova crkva je na vrhu stijene, koja se nekad u okomitim stepenicama spuštala prema dvadesetak metara nižoj Trebišnjici. Danas taj istaknuti položaj nije tako upadljiv zbog zgrada koje su zaklonile litice s južne strane. Sa zapadne i istočne strane također su bile strme padine, te se samo sa sjevera moglo jednostavno prići crkvi.",
-      "Tvrdoš Monastery is the oldest active monastery in present-day Herzegovina. It stands at about 270 meters above sea level, and its church sits on top of a rock that once descended in steep steps toward the Trebišnjica River, around twenty meters below. Today, that prominent position is less striking because buildings have screened the cliffs on the southern side. There were also steep slopes on the western and eastern sides, so the church could be approached easily only from the north."
-    ),
-    imageUrl: getPublicAssetPath("/images/manastir-tvrdos.png"),
-    municipalitySlug: "trebinje",
-    url: DESTINATION_URLS.trebinje,
-    keywords: ["manastir tvrdos", "manastir tvrdoš", "tvrdos", "tvrdoš", "trebinje"],
-    order: 2,
-  },
-  {
-    id: "poi-trebisnjica",
-    categoryId: "poi",
-    title: withFallback("Trebišnjica", "Trebišnjica River"),
-    description: withFallback(
-      "Trebišnjica, jedna od rijetkih ponornica koja protiče kroz gradsko jezgro, daje Trebinju poseban šarm. Duž njenih obala prostiru se uređeno šetalište i veslačka staza, dok je vožnja čamcem rijekom jedan od doživljaja koji posjetioci najčešće izdvajaju kao uspomenu na boravak u gradu.", 
-      "The Trebišnjica, one of the few sinking rivers that flows through a city center, gives Trebinje a unique charm. Along its banks stretch a beautifully landscaped promenade and a rowing course, while a boat ride on the river is one of the experiences visitors most often highlight as a lasting memory of their stay in the city."),
-    imageUrl: getPublicAssetPath("/images/trebisnjica.png"),
-    municipalitySlug: "trebinje",
-    url: DESTINATION_URLS.trebinje,
-    keywords: ["trebisnjica", "rijeka trebisnjica", "trebišnjica", "trebišnjicu", "trebišnjice", "trebinje"],
-    order: 1,
-  },
-  {
-    id: "poi-vinarije-andjelic-vukoje",
-    categoryId: "poi",
-    title: withFallback(
-      "Vinarije Anđelić i Vukoje",
-      "Anđelić and Vukoje wineries"
-    ),
-    description: withFallback(
-      "Trebinje je jedan od najznačajnijih vinogradarskih centara Hercegovine, područje u kojem se tradicija uzgoja vinove loze prenosi generacijama. Poznate vinarije, poput Anđelić i Vukoje, otvaraju svoja vrata posjetiocima kroz vođene obilaske i degustacije vrhunskih vina.",
-      "Trebinje is one of Herzegovina’s most important wine-growing regions, where the tradition of viticulture has been passed down through generations. Renowned wineries such as Anđelić and Vukoje welcome visitors with guided tours and tastings of premium local wines."
-    ),
-    imageUrl: getPublicAssetPath("/images/vinarije-trebinje.png"),
-    municipalitySlug: "trebinje",
-    url: DESTINATION_URLS.trebinje,
-    keywords: [
-      "vinarije andjelic i vukoje",
-      "vinarija andjelic",
-      "vinarija vukoje",
-      "andjelic",
-      "vinarije",
-      "vinariji",
-      "anđelić",
-      "vukoje",
-      "trebinje"
-    ],
-    order: 2,
-  },
-  {
-    id: "poi-hercegovacka-gracanica",
-    categoryId: "poi",
-    title: withFallback("Hercegovačka Gračanica", "Herzegovinian Gračanica"),
-    description: withFallback(
-      "Hram Blagoveštenja, Hercegovačka Gračanica uzdiže se iznad Trebinja, nudeći zadivljujući pogled, spokojno manastirsko okruženje te spoj duhovnosti, istorije i arhitekture.", 
-      "The Church of the Annunciation at Hercegovačka Gračanica rises above Trebinje, offering breathtaking views, a peaceful monastic setting, and a unique blend of spirituality, history, and architecture."),
-    imageUrl: getPublicAssetPath("/images/gracanica.png"),
-    municipalitySlug: "trebinje",
-    url: DESTINATION_URLS.trebinje,
-    keywords: [
-      "hercegovacka gracanica",
-      "hercegovačka gračanica",
-      "gracanica",
-      "gračanica",
-    ],
-    order: 3,
   },
   {
     id: "page-bileca",
@@ -129,68 +63,6 @@ const suggestionCatalog: SuggestionCatalogItem[] = [
     order: 3,
   },
   {
-    id: "poi-bilecko-jezero",
-    categoryId: "poi",
-    title: withFallback("Bilećko jezero", "Bileća Lake"),
-    description: withFallback(
-      "Jedna od najvećih vještačkih akumulacija na Balkanu – 18 km dužine, 104 m dubine, kristalno čista voda. Na dnu jezera leže potopljena sela i jedno od najvećih arheoloških nalazišta iz doba Rimskog carstva na Balkanu – tiha istorija koja čeka da bude ispričana.",
-      "One of the largest artificial lakes in the Balkans, Lake Bileća stretches for 18 kilometers and reaches depths of up to 104 meters, with remarkably clear waters. Beneath the surface lie submerged villages and one of the Balkans’ largest archaeological sites from the Roman era — a silent piece of history waiting to be discovered."
-    ),
-    imageUrl: getPublicAssetPath("/images/bilecko-jezero.png"),
-    municipalitySlug: "bileca",
-    url: DESTINATION_URLS.bileca,
-    keywords: ["bilecko jezero", "bilećko jezero"],
-    order: 4,
-  },
-  {
-    id: "poi-manastir-dobricevo",
-    categoryId: "poi",
-    title: withFallback("Manastir Dobrićevo", "Dobrićevo Monastery"),
-    description: withFallback(
-      "Srpski pravoslavni manastir iz 13. vijeka, nacionalni spomenik BiH. Tri puta spaljen, tri puta obnovljen. Godine 1967. fizički premješten da ne bude potopljen — u konzervatorskom poduhvatu koji je realizovan uz podršku Stanfordskog univerziteta.",
-      "A 13th-century Serbian Orthodox monastery and a National Monument of Bosnia and Herzegovina. Burned down three times and rebuilt three times, it was physically relocated in 1967 to save it from being submerged — a remarkable conservation effort carried out with support from Stanford University."
-    ),
-    imageUrl: getPublicAssetPath("/images/manastir-dobricevo.png"),
-    municipalitySlug: "bileca",
-    url: DESTINATION_URLS.bileca,
-    keywords: ["manastir dobricevo", "dobricevo", "dobrićevo"],
-    order: 5,
-  },
-  {
-    id: "poi-tvrdjava-drakuljica",
-    categoryId: "poi",
-    title: withFallback("Tvrđava Drakuljica", "Drakuljica Fortress"),
-    description: withFallback(
-      "Austro-ugarska vojna tvrđava iznad Bilećkog jezera – jedna od osam koje su nadgledale grad. Odavde se pruža najljepši panoramski pogled na cijelo jezero i okolne planine.",
-      "An Austro-Hungarian military fortress overlooking Lake Bileća, one of eight that once guarded the town. From here, visitors can enjoy some of the finest panoramic views of the lake and the surrounding mountains."
-    ),
-    imageUrl: getPublicAssetPath("/images/tvrdjava-drakuljica.png"),
-    municipalitySlug: "bileca",
-    url: DESTINATION_URLS.bileca,
-    keywords: ["tvrdjava drakuljica", "tvrđava drakuljica", "drakuljica"],
-    order: 6,
-  },
-  {
-    id: "poi-bileca-nekropola-stecaka",
-    categoryId: "poi",
-    title: withFallback("Nekropola stećaka", "Stećak Necropolis"),
-    description: withFallback(
-      "Na listi UNESCO svjetske baštine. Najveća vještačka nekropola srednjovjekovnih nadgrobnih spomenika na Balkanu, nastala 1967. da spasi stećke od potapanja jezera. Na UNESCO listi od 2016. Kameni jezik jedne civilizacije.",
-      "Listed as a UNESCO World Heritage Site, this is the largest man-made necropolis of medieval tombstones in the Balkans. It was created in 1967 to preserve the stećci from being submerged by the lake and has been on the UNESCO list since 2016. A stone language of a vanished civilization."
-    ),
-    imageUrl: getPublicAssetPath("/images/nekropola.png"),
-    municipalitySlug: "bileca",
-    url: DESTINATION_URLS.bileca,
-    keywords: [
-      "nekropola stecaka",
-      "nekropola stećaka",
-      "bileca nekropola",
-      "bileća nekropola",
-      "nekropola bileca",
-    ],
-    order: 7,
-  },
-  {
     id: "page-kalinovik",
     categoryId: "pages",
     title: withFallback("Kalinovik", "Kalinovik"),
@@ -205,68 +77,6 @@ const suggestionCatalog: SuggestionCatalogItem[] = [
     order: 4,
   },
   {
-    id: "poi-zelengora-gorske-oci",
-    categoryId: "poi",
-    title: withFallback(
-      "Zelengora – jezera Gorske oči",
-      "Zelengora – Gorske oči lakes"
-    ),
-    description: withFallback(
-      "Mnogi je smatraju najljepšom planinom u BiH. Glacijalna jezera (Orlovačko, Kladopoljsko, Borilovačko/Jugovo, Štirinsko, Kotlaničko, Crvanjsko), crnogorična i listopadna šuma, bogati pašnjaci i klisure. Najviši vrh Bregoč, 2.014 m.",
-      "Considered by many to be one of the most beautiful mountains in Bosnia and Herzegovina, Zelengora is known for its glacial lakes, including Orlovačko, Kladopoljsko, Borilovačko (Jugovo), Štirinsko, Kotlaničko, and Crvanjsko. Its landscape combines coniferous and deciduous forests, rich mountain pastures, and dramatic gorges. Its highest peak, Bregoč, rises to 2,014 meters."
-    ),
-    imageUrl: getPublicAssetPath("/images/jezera-gorske-oci.png"),
-    municipalitySlug: "kalinovik",
-    url: DESTINATION_URLS.kalinovik,
-    keywords: ["zelengora", "jezera gorske oci", "gorske oči", "gorske oci"],
-    order: 8,
-  },
-  {
-    id: "poi-nekropole-cengica-bara-gvozno",
-    categoryId: "poi",
-    title: withFallback(
-      "Nekropole stećaka Čengića Bara i Gvozno",
-      "Čengića Bara and Gvozno stećak necropolises"
-    ),
-    description: withFallback(
-      "Čengića bara (11 km jugozapadno, 1.370 m n.v.): 52 stećka, 19 ukrašenih, motivima mača, štita i lova na jelene, natpis o Stojanu Opodinoviću. Gvozno (11 km sjeverozapadno, Treskavica): 87 stećaka, jedinstveni prikaz krilatih zmajeva. Dio transnacionalne UNESCO liste stećaka.",
-      "Čengića Bara (11 km southwest, 1,370 m above sea level): 52 stećci, 19 of them decorated with motifs of swords, shields, and deer hunting, as well as an inscription mentioning Stojan Opodinović. Gvozno (11 km northwest, on Treskavica): 87 stećci, including a unique depiction of winged dragons. Both sites are part of the transnational UNESCO World Heritage listing of stećci."
-    ),
-    imageUrl: getPublicAssetPath("/images/nekropola-cengica-bara.png"),
-    municipalitySlug: "kalinovik",
-    url: DESTINATION_URLS.kalinovik,
-    keywords: ["cengica bara", "čengića bara", "gvozno"],
-    order: 9,
-  },
-  {
-    id: "poi-via-dinarica-kalinovik",
-    categoryId: "poi",
-    title: withFallback("Via Dinarica", "Via Dinarica"),
-    description: withFallback(
-      "Kalinovik leži na glavnoj planinarskoj liniji Dinarida (334 km u BiH). Planinarski put “Dr Jovo Elčić” (2013) povezuje Treskavicu, Leliju i Zelengoru kroz 15 kontrolnih tačaka. PSD “Lelija” markiralo je oko 150 km staza – organizovane ture moguće uz licencirane vodiče.",
-      "Kalinovik lies along the main hiking route through the Dinaric Alps, which stretches for 334 km across Bosnia and Herzegovina. The “Dr Jovo Elčić” hiking trail, established in 2013, connects Treskavica, Lelija, and Zelengora through 15 checkpoints. The PSD “Lelija” mountaineering club has marked around 150 km of trails, and guided tours can be arranged with licensed mountain guides."
-    ),
-    imageUrl: getPublicAssetPath("/images/via-dinarica-kalinovik.png"),
-    municipalitySlug: "kalinovik",
-    url: DESTINATION_URLS.kalinovik,
-    keywords: ["via dinarica"],
-    order: 10,
-  },
-  {
-    id: "poi-pecina-kuk",
-    categoryId: "poi",
-    title: withFallback("Pećina Kuk", "Kuk Cave"),
-    description: withFallback(
-      "Jedna od tri najljepše pećine u Republici Srpskoj, na Sijeračkim stijenama u kanjonu rijeke Bistrice. Značajan paleontološki lokalitet — pronađeni ostaci pećinskog medvjeda starosti 36.000–40.000 godina. Pod zaštitom Zavoda za zaštitu kulturno-istorijskog i prirodnog nasljeđa RS.",
-      "Considered one of the three most beautiful caves in Republika Srpska, this cave is located in the Sijeračke Cliffs in the canyon of the Bistrica River. It is also an important paleontological site, where remains of a cave bear dating back 36,000–40,000 years were discovered. The site is protected by the Institute for the Protection of Cultural, Historical and Natural Heritage of Republika Srpska."
-    ),
-    imageUrl: getPublicAssetPath("/images/pecina-kuk.png"),
-    municipalitySlug: "kalinovik",
-    url: DESTINATION_URLS.kalinovik,
-    keywords: ["pecina kuk", "pećina kuk"],
-    order: 11,
-  },
-  {
     id: "page-berkovici",
     categoryId: "pages",
     title: withFallback("Berkovići", "Berkovići"),
@@ -279,56 +89,6 @@ const suggestionCatalog: SuggestionCatalogItem[] = [
     url: DESTINATION_URLS.berkovici,
     keywords: ["berkovici", "berkovići", "stari grad koštun", "nekropola stećaka potkuk"],
     order: 5,
-  },
-  {
-    id: "poi-stari-grad-kostun",
-    categoryId: "poi",
-    title: withFallback("Stari grad Koštun", "Koštun Old Town"),
-    description: withFallback(
-      "Nacionalni spomenik BiH. Ranovizantijsko utvrđenje iz VI vijeka, izgrađeno u doba cara Justinijana I u selu Dabrica. Nacionalni spomenik BiH od 2004. Ostaci keramike iz bronzanog i željeznog doba pronađeni unutar zidina — jedan od najstarijih gradova na ovom prostoru.",
-      "A National Monument of Bosnia and Herzegovina. This 6th-century Early Byzantine fortress, located in the village of Dabrica, was built during the reign of Emperor Justinian I. It has been protected as a national monument since 2004. Remains of Bronze and Iron Age pottery found within its walls suggest that it is one of the oldest settlements in the area."
-    ),
-    imageUrl: getPublicAssetPath("/images/stari-grad-kostun.png"),
-    municipalitySlug: "berkovici",
-    url: DESTINATION_URLS.berkovici,
-    keywords: ["stari grad kostun", "stari grad koštun", "kostun", "koštun"],
-    order: 12,
-  },
-  {
-    id: "poi-nekropola-potkuk",
-    categoryId: "poi",
-    title: withFallback("Nekropola stećaka Potkuk", "Potkuk Stećak Necropolis"),
-    description: withFallback(
-      "Nekropola Potkuk u selu Bitunja upisana je 2016. godine na UNESCO Listu svjetske kulturne baštine. Autentičan ambijent i očuvani stećci različitih oblika čine je najznačajnijim kulturnim lokalitetom opštine. Praktično svako selo u opštini posjeduje sopstvenu nekropolu.",
-      "The Potkuk Necropolis in the village of Bitunja was inscribed on the UNESCO World Heritage List in 2016. Its authentic setting and well-preserved stećci of various shapes make it the municipality’s most important cultural site. Almost every village in the area has its own stećci necropolis."
-    ),
-    imageUrl: getPublicAssetPath("/images/nekropola-potkuk.png"),
-    municipalitySlug: "berkovici",
-    url: DESTINATION_URLS.berkovici,
-    keywords: ["nekropola stecaka potkuk", "nekropola stećaka potkuk", "potkuk"],
-    order: 13,
-  },
-  {
-    id: "poi-paraglajding-trusina",
-    categoryId: "poi",
-    title: withFallback(
-      "Paraglajding poletište Trusina",
-      "Trusina paragliding take-off site"
-    ),
-    description: withFallback(
-      "Prema ocjenama pilota, jedno od tri najbolja paraglajding poletišta u Bosni i Hercegovini. Povoljan položaj terena i vazdušna strujanja omogućavaju dugačke panoramske letove iznad hercegovačkog krša. Radno vrijeme: po vremenskim uslovima.",
-      "According to experienced pilots, this is one of the top three paragliding launch sites in Bosnia and Herzegovina. Its favorable terrain and air currents allow for long panoramic flights over the Herzegovinian karst landscape. Operating hours depend on weather conditions."
-    ),
-    imageUrl: getPublicAssetPath("/images/paraglajdin-poletiste-trusina.png"),
-    municipalitySlug: "berkovici",
-    url: DESTINATION_URLS.berkovici,
-    keywords: [
-      "paraglajding poletiste trusina",
-      "paraglajding poletište trusina",
-      "poletiste trusina",
-      "trusina",
-    ],
-    order: 14,
   },
   {
     id: "page-stari-most",
@@ -429,92 +189,151 @@ const suggestionCatalog: SuggestionCatalogItem[] = [
     interestIds: ["adventure"],
     order: 3,
   },
+  {
+    id: "route-hercegovina-za-cijelu-porodicu",
+    categoryId: "thematic_routes",
+    title: withFallback("Hercegovina za cijelu porodicu", "Herzegovina for the Whole Family"),
+    description: withFallback(
+      "Pronađite ideje za porodični obilazak Hercegovine kroz istorijske znamenitosti, prirodne predele i mesta za predah. Izaberite stanice koje odgovaraju uzrastu, interesovanjima i vremenu koje imate na raspolaganju.",
+      "Find ideas for a family visit to Herzegovina through historic landmarks, natural landscapes and places to take a break. Choose stops that suit your family's ages, interests and available time."
+    ),
+    imageUrl: getPublicAssetPath("/images/routes/ruta-herzegovina-za-celu-porodicu.png"),
+    url: "https://smartherz.info/tematske-rute/hercegovina-za-cijelu-porodicu/",
+    keywords: ["hercegovina za cijelu porodicu", "hercegovina za celu porodicu", "herzegovina for the whole family"],
+    order: 4,
+  },
+  {
+    id: "route-staza-vode-i-krsa",
+    categoryId: "thematic_routes",
+    title: withFallback("Staza vode i krša", "The Water and Karst Trail"),
+    description: withFallback(
+      "Istražite Hercegovinu kroz njene reke, jezera, izvore, mostove i kraške predele. Ova ruta daje ideje za nastavak obilaska uz vodu i upoznavanje pejzaža koje su oblikovali voda i kamen.",
+      "Explore Herzegovina through its rivers, lakes, springs, bridges and karst landscapes. This route offers ideas for continuing your visit beside the water and discovering scenery shaped by water and stone."
+    ),
+    imageUrl: getPublicAssetPath("/images/routes/ruta-staza-vode-i-krsa-hero.png"),
+    url: "https://smartherz.info/tematske-rute/staza-vode-i-krsa/",
+    keywords: ["staza vode i krsa", "water and karst trail", "trail of water and karst"],
+    order: 5,
+  },
 ];
 
 const featuredCategoryIds: CategoryId[] = ["pages", "poi", "thematic_routes"];
 
+const cyrillicLetters: Record<string, string> = {
+  а: "a", б: "b", в: "v", г: "g", д: "d", ђ: "dj", е: "e", ж: "z",
+  з: "z", и: "i", ј: "j", к: "k", л: "l", љ: "lj", м: "m", н: "n",
+  њ: "nj", о: "o", п: "p", р: "r", с: "s", т: "t", ћ: "c", у: "u",
+  ф: "f", х: "h", ц: "c", ч: "c", џ: "dz", ш: "s",
+};
+
 const normalizeText = (value: string) =>
   value
     .toLowerCase()
+    .replace(/[а-яђјљњћџ]/g, (letter) => cyrillicLetters[letter] ?? letter)
+    .replace(/đ/g, "dj")
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\bsv\b/g, "svetog")
+    .trim();
 
-const sortByOrder = (a: SuggestionCatalogItem, b: SuggestionCatalogItem) =>
-  a.order - b.order;
+// Keep every master-sheet row while sharing one card for confirmed duplicate places.
+const poiById = new Map<string, SuggestionCatalogItem>();
+for (const record of poiRecords) {
+  const existing = poiById.get(record.canonicalId);
+  if (existing) {
+    existing.keywords = [...new Set([...existing.keywords, ...record.keywords])];
+    existing.imageUrl ||= record.imageUrl || undefined;
+    existing.routeIds = [...new Set([...(existing.routeIds ?? []), ...record.routeIds])];
+    continue;
+  }
+  const municipalities = new Set(record.municipalities.map(normalizeText));
+  const municipalitySlugs = REGION_ENTRIES
+    .filter(([, name]) => municipalities.has(normalizeText(name)))
+    .map(([slug]) => slug);
+  poiById.set(record.canonicalId, {
+    id: record.canonicalId,
+    categoryId: "poi",
+    title: record.title,
+    description: record.description,
+    imageUrl: record.imageUrl || undefined,
+    url: DESTINATION_URLS[municipalitySlugs[0]],
+    municipalitySlug: municipalitySlugs[0],
+    municipalitySlugs,
+    keywords: [...record.keywords],
+    routeIds: record.routeIds,
+    order: poiById.size + 1,
+  });
+}
 
-export type CsvRecommendation = {
-  id: string;
-  name: string;
-  category: "poi" | "thematic_routes";
-  municipality?: string;
+const suggestionCatalog = [...featuredCatalog, ...poiById.values()];
+
+// Match complete words and common case endings, e.g. Gračanica / Gračanice / Gračanicu.
+const keywordPattern = (keyword: string) => {
+  const words = normalizeText(keyword).split(" ").map((word) => {
+    if (word.length < 4) return word;
+    const stem = word.replace(/(?:ima|ama|og|oj|ih|im|om|em|a|e|i|o|u)$/, "");
+    if (stem.length < 4) return word;
+    return `(?:${word}|${stem}(?:a|e|i|o|u|om|em|ima|ama|og|oga|oj|ih|im|ovima|evima)?)`;
+  });
+  return new RegExp(`\\b${words.join("\\s+")}\\b`, "g");
 };
+
+const searchableCatalog = suggestionCatalog.map((item) => ({
+  item,
+  patterns: [...new Set([
+    ...item.keywords,
+    ...Object.values(item.title).filter((title): title is string => Boolean(title)),
+  ].map(normalizeText))]
+    .filter(Boolean)
+    .map(keywordPattern),
+}));
 
 export const buildRightSuggestions = (
   assistantText: string,
   activeExperienceIds: ExperienceFilterId[] = [],
-  userText = "",
-  csvRecommendations?: CsvRecommendation[]
+  userText = ""
 ): SuggestionsByCategory => {
   const suggestions = createEmptySuggestions();
-  const normalizedText = normalizeText(`${userText}\n${assistantText}`);
   const activeExperienceIdSet = new Set(activeExperienceIds);
+  const matchedIds = new Set<string>();
 
-  if (!normalizedText.trim() && activeExperienceIdSet.size === 0) {
-    return suggestions;
+  // Evaluate messages separately so a phrase cannot span the question/answer boundary.
+  for (const text of [userText, assistantText].map(normalizeText)) {
+    const mentions = searchableCatalog.flatMap(({ item, patterns }) =>
+      patterns.flatMap((pattern) =>
+        Array.from(text.matchAll(pattern), (match) => ({
+          item,
+          start: match.index!,
+          end: match.index! + match[0].length,
+        }))
+      )
+    );
+    for (const mention of mentions) {
+      // A longer place name takes precedence over a name nested inside it.
+      const nested = mention.item.categoryId === "poi" && mentions.some((other) =>
+        other.item.categoryId === "poi" &&
+        other.item.id !== mention.item.id &&
+        other.start <= mention.start && other.end >= mention.end &&
+        other.end - other.start > mention.end - mention.start
+      );
+      if (!nested) matchedIds.add(mention.item.id);
+    }
   }
 
-  const matchedItems = suggestionCatalog
-    .filter((item) => {
-      const matchesAssistantText = item.keywords.some((keyword) =>
-        normalizedText.includes(normalizeText(keyword))
-      );
-      const matchesInterest = item.interestIds?.some((interestId) =>
-        activeExperienceIdSet.has(interestId)
-      );
+  for (const poi of poiById.values()) {
+    if (matchedIds.has(poi.id)) {
+      for (const routeId of poi.routeIds ?? []) matchedIds.add(routeId);
+    }
+  }
 
-      return matchesAssistantText || matchesInterest;
-    })
-    .sort(sortByOrder);
+  const matchedItems = suggestionCatalog.filter((item) =>
+    matchedIds.has(item.id) ||
+    item.interestIds?.some((interestId) => activeExperienceIdSet.has(interestId))
+  ).sort((a, b) => a.order - b.order);
 
   for (const categoryId of featuredCategoryIds) {
-    suggestions[categoryId] = matchedItems.filter(
-      (item) => item.categoryId === categoryId
-    );
+    suggestions[categoryId] = matchedItems.filter((item) => item.categoryId === categoryId);
   }
-
-  if (csvRecommendations !== undefined) {
-    // CSV cards are selected by the backend from the source used for this answer.
-    // Keep existing descriptions/images where that exact place is already known.
-    for (const categoryId of ["poi", "thematic_routes"] as const) {
-      suggestions[categoryId] = csvRecommendations
-        .filter((record) => record.category === categoryId)
-        .map((record) => {
-          const existing = suggestionCatalog.find(
-            (item) => (item.categoryId === categoryId || (categoryId === "poi" && item.categoryId === "pages")) &&
-              Object.values(item.title).some(
-                (name) => name && normalizeText(name) === normalizeText(record.name)
-              )
-          );
-          const municipalities = (record.municipality || "").split(",").map((name) => normalizeText(name.trim()));
-          const municipalitySlugs = REGION_ENTRIES
-            .filter(([, name]) => municipalities.includes(normalizeText(name)))
-            .map(([slug]) => slug);
-          return {
-            ...existing,
-            id: record.id,
-            categoryId,
-            title: existing?.title ?? withFallback(record.name, record.name),
-            description: existing?.description ?? withFallback(record.municipality || "", record.municipality || ""),
-            municipalitySlug: municipalitySlugs[0] ?? existing?.municipalitySlug,
-            municipalitySlugs,
-          };
-        });
-    }
-    suggestions.pages = suggestions.pages.filter((page) =>
-      !csvRecommendations.some((record) => record.category === "poi" &&
-        Object.values(page.title).some((name) => name && normalizeText(name) === normalizeText(record.name)))
-    );
-  }
-
   return suggestions;
 };

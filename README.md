@@ -2,12 +2,12 @@
 
 Frontend foundation for the SmartHerz Assistant application.
 
-The chat can now receive source-backed POI and thematic-route cards in the
-final streaming response. New CSV POIs display their name and municipality;
-images, descriptions and links are optional. Existing matching card content
-is reused without duplicate POI/page cards. Municipality filters support
-POIs shared by two municipalities, and the user can expand all matching POIs.
-Older backend responses without card metadata retain the existing card flow.
+The right panel selects cards by matching keywords in the question and completed
+answer. `src/data/poiCatalog.json` contains the 280 source rows from the `svi POI`
+sheet, with bilingual card text and image URLs. Confirmed duplicate places share
+one card. Names support diacritics, Cyrillic and common grammatical endings.
+Card content comes from the local catalog. Municipality filters support places
+shared by multiple municipalities, and the user can expand all matching POIs.
 No integration API key is embedded in the frontend.
 
 This project is built with the `Next.js` App Router and currently serves as the initial UI skeleton for further assistant development. The goal of this codebase is to provide a stable frontend setup, a basic layout system, a UI component library, and a static build/deployment flow.
@@ -167,6 +167,16 @@ npx serve@latest out
 ```
 
 `npm start` is not a valid runtime flow for the current setup because `Next.js` with `output: "export"` does not support `next start`.
+
+## Food photos in chat
+
+`src/data/foodCatalog.ts` contains the food names in Bosnian and English, matching aliases, and photo URLs. Add or update entries here to maintain the available food photos.
+
+Food photos are enabled per message only when `isFoodQuestion` recognizes a dish name or an explicit food/dining topic in the user's question, in Bosnian or English. General sightseeing questions do not show food photos just because the reply mentions cuisine. Existing interest filters and earlier food questions do not enable photos for later unrelated questions.
+
+After an eligible assistant reply finishes, `findFoodImages` matches names in that reply. `FoodImages` displays each matched photo once below its message, in order of mention, with captions in the selected interface language. Photos that fail to load are hidden.
+
+Click a food photo to open its full image in a modal. Close it with the close button, Escape, or a click outside the image. Keyboard focus returns to the photo button after closing.
 
 ## Notes
 
