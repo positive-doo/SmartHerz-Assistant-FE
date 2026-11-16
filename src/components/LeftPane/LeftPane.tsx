@@ -2008,14 +2008,11 @@ export default function LeftPane() {
               </div>
             </div>
 
-            <div
-              className={`${styles.hint} ${
-                voiceError ? styles.voiceError : ""
-              }`}
-              role={voiceError ? "status" : undefined}
-            >
-              {voiceError || t("hint")}
-            </div>
+            {voiceError && (
+              <div className={`${styles.hint} ${styles.voiceError}`} role="status">
+                {voiceError}
+              </div>
+            )}
           </div>
         </div>
       </div>
